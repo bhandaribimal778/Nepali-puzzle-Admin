@@ -1,0 +1,1215 @@
+<!DOCTYPE html>
+<html lang="ne">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nepali Puzzle Admin Portal | नेपाली पजल एडमिन ड्यासबोर्ड</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Mukta:wght@300;400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Firebase Web SDK (Compat v10 for universal browser support) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+    <style>
+        :root {
+            --bg-body: #0d1117;
+            --bg-sidebar: #161b22;
+            --bg-card: #21262d;
+            --bg-card-hover: #29303b;
+            --bg-input: #090d13;
+            --border-color: #30363d;
+            --primary: #38bdf8;
+            --primary-hover: #0284c7;
+            --primary-glow: rgba(56, 189, 248, 0.2);
+            --accent-nepal: #ef4444;
+            --accent-gold: #f59e0b;
+            --accent-green: #10b981;
+            --accent-purple: #a855f7;
+            --text-main: #f0f6fc;
+            --text-muted: #8b949e;
+            --sidebar-width: 260px;
+            --header-height: 70px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-sm: 8px;
+            --font-en: 'Plus Jakarta Sans', sans-serif;
+            --font-ne: 'Mukta', sans-serif;
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: var(--font-ne), var(--font-en);
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            line-height: 1.5;
+        }
+
+        /* ---------------- FULL-SCREEN LOGIN GATE ---------------- */
+        #loginGate {
+            min-height: 100vh;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: radial-gradient(circle at 50% 20%, #1e293b 0%, #0d1117 80%);
+            position: fixed;
+            top: 0; left: 0;
+            z-index: 9999;
+        }
+
+        .login-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            width: 100%;
+            max-width: 440px;
+            padding: 36px 30px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #ef4444, #38bdf8);
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 26px;
+        }
+
+        .login-logo {
+            width: 54px;
+            height: 54px;
+            background: linear-gradient(135deg, #ef4444, #38bdf8);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 26px;
+            font-weight: 800;
+            margin: 0 auto 14px;
+            box-shadow: 0 8px 25px rgba(56, 189, 248, 0.35);
+        }
+
+        .login-header h2 {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 6px;
+        }
+
+        .login-header p {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .security-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(56, 189, 248, 0.12);
+            color: var(--primary);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-top: 10px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .form-control {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            padding: 12px 14px;
+            border-radius: var(--radius-sm);
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 14px;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-glow);
+        }
+
+        .login-btn {
+            background: linear-gradient(135deg, #38bdf8, #0284c7);
+            color: #04101d;
+            border: none;
+            width: 100%;
+            padding: 12px;
+            border-radius: var(--radius-sm);
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-top: 8px;
+        }
+
+        .login-btn:hover {
+            opacity: 0.95;
+            box-shadow: 0 4px 18px rgba(56, 189, 248, 0.35);
+        }
+
+        .auth-error {
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.35);
+            color: #f87171;
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        /* ---------------- DASHBOARD CONTAINER ---------------- */
+        #adminApp {
+            display: none;
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        /* SIDEBAR STYLES */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0; bottom: 0; left: 0;
+            z-index: 100;
+            transition: var(--transition);
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .logo-text h2 {
+            font-size: 17px; font-weight: 700; color: var(--text-main); line-height: 1.2;
+        }
+        .logo-text span {
+            font-size: 11px; color: var(--accent-green); text-transform: uppercase; letter-spacing: 0.8px; font-weight: 700;
+        }
+
+        .sidebar-menu {
+            flex: 1; padding: 16px 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px;
+        }
+
+        .menu-label {
+            font-size: 11px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px; margin: 14px 10px 6px; font-weight: 600;
+        }
+
+        .nav-item {
+            display: flex; align-items: center; gap: 12px; padding: 11px 14px;
+            border-radius: var(--radius-sm); color: var(--text-muted); text-decoration: none;
+            font-size: 14px; font-weight: 600; cursor: pointer; transition: var(--transition); border: 1px solid transparent;
+        }
+
+        .nav-item:hover { color: var(--text-main); background: rgba(255, 255, 255, 0.04); }
+        .nav-item.active {
+            color: var(--primary); background: var(--primary-glow); border-color: rgba(56, 189, 248, 0.25);
+        }
+        .nav-item svg { width: 18px; height: 18px; stroke-width: 2; flex-shrink: 0; }
+
+        .sidebar-footer {
+            padding: 16px; border-top: 1px solid var(--border-color); display: flex; align-items: center; gap: 12px; background: rgba(0, 0, 0, 0.2);
+        }
+        .user-avatar {
+            width: 38px; height: 38px; border-radius: 50%; background: #2563eb; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; border: 2px solid #38bdf8;
+        }
+        .user-info h4 { font-size: 13px; font-weight: 700; color: var(--text-main); }
+        .user-info p {
+            font-size: 11px; color: var(--accent-green); display: flex; align-items: center; gap: 4px; font-weight: 600;
+        }
+        .user-info p::before {
+            content: ''; width: 6px; height: 6px; background: var(--accent-green); border-radius: 50%; display: inline-block;
+        }
+
+        /* MAIN CONTENT AREA */
+        .main-wrapper {
+            margin-left: var(--sidebar-width); flex: 1; display: flex; flex-direction: column; min-height: 100vh; width: calc(100% - var(--sidebar-width));
+        }
+
+        .top-header {
+            height: var(--header-height); border-bottom: 1px solid var(--border-color);
+            background: rgba(22, 27, 34, 0.9); backdrop-filter: blur(12px);
+            display: flex; align-items: center; justify-content: space-between; padding: 0 28px; position: sticky; top: 0; z-index: 90;
+        }
+
+        .header-title { display: flex; align-items: center; gap: 12px; }
+        .header-title h1 { font-size: 19px; font-weight: 700; color: var(--text-main); }
+        
+        .live-status-pill {
+            display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px;
+            background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .header-actions { display: flex; align-items: center; gap: 12px; }
+
+        .action-btn {
+            background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); padding: 8px 14px;
+            border-radius: var(--radius-sm); font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; transition: var(--transition);
+        }
+        .action-btn:hover { background: var(--bg-card-hover); border-color: #484f58; }
+        .action-btn.btn-primary { background: var(--primary); color: #0b1120; border-color: var(--primary); }
+        .action-btn.btn-primary:hover { background: var(--primary-hover); color: #fff; }
+        .action-btn.btn-danger { background: rgba(239, 68, 68, 0.15); color: #ef4444; border-color: rgba(239, 68, 68, 0.3); }
+        .action-btn.btn-danger:hover { background: #ef4444; color: #fff; }
+
+        /* BODY CONTENT */
+        .content-body { padding: 28px; flex: 1; }
+        .page-section { display: none; animation: fadeIn 0.3s ease; }
+        .page-section.active { display: block; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* METRIC CARDS */
+        .metrics-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 20px; margin-bottom: 28px;
+        }
+        .metric-card {
+            background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 20px; transition: var(--transition);
+        }
+        .metric-card:hover { transform: translateY(-3px); border-color: #484f58; }
+        .metric-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+        .metric-title { font-size: 14px; color: var(--text-muted); font-weight: 600; }
+        .metric-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        .metric-icon.blue { background: rgba(56, 189, 248, 0.15); color: var(--primary); }
+        .metric-icon.green { background: rgba(16, 185, 129, 0.15); color: var(--accent-green); }
+        .metric-icon.amber { background: rgba(245, 158, 11, 0.15); color: var(--accent-gold); }
+        .metric-icon.purple { background: rgba(168, 85, 247, 0.15); color: var(--accent-purple); }
+        .metric-value { font-size: 28px; font-weight: 800; color: var(--text-main); margin-bottom: 6px; }
+        .metric-sub { font-size: 12px; color: var(--accent-green); display: flex; align-items: center; gap: 4px; font-weight: 600; }
+
+        /* PANELS & TABLES */
+        .panel { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 24px; margin-bottom: 24px; }
+        .panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding-bottom: 14px; border-bottom: 1px solid var(--border-color); }
+        .panel-header h3 { font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+        .table-responsive { width: 100%; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
+        th { background: rgba(255, 255, 255, 0.02); color: var(--text-muted); padding: 12px 16px; font-weight: 600; border-bottom: 1px solid var(--border-color); white-space: nowrap; }
+        td { padding: 14px 16px; border-bottom: 1px solid var(--border-color); color: var(--text-main); vertical-align: middle; }
+        tr:hover td { background: rgba(255, 255, 255, 0.02); }
+
+        .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+        .status-badge.published { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .status-badge.draft { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+        .status-badge.disabled { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+        .status-badge.active { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; margin-bottom: 20px; }
+        textarea.form-control { resize: vertical; min-height: 85px; }
+
+        /* TOAST & MODAL */
+        .toast {
+            position: fixed; bottom: 24px; right: 24px; background: #1e293b; color: #fff; padding: 14px 20px; border-radius: var(--radius-md);
+            border: 1px solid var(--primary); display: flex; align-items: center; gap: 10px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            z-index: 10000; opacity: 0; transform: translateY(20px); transition: var(--transition); pointer-events: none;
+        }
+        .toast.show { opacity: 1; transform: translateY(0); }
+
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(4px);
+            display: none; align-items: center; justify-content: center; z-index: 200; padding: 20px;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal-container {
+            background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); width: 100%; max-width: 600px;
+            max-height: 90vh; overflow-y: auto; padding: 24px; animation: modalPop 0.25s ease;
+        }
+        @keyframes modalPop { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color); }
+        .close-modal { background: none; border: none; color: var(--text-muted); font-size: 22px; cursor: pointer; }
+
+        .progress-bar-bg { background: rgba(255, 255, 255, 0.08); border-radius: 10px; height: 8px; overflow: hidden; width: 100%; }
+        .progress-bar-fill { height: 100%; border-radius: 10px; transition: width 0.5s ease; }
+        .fill-blue { background: var(--primary); }
+        .fill-green { background: var(--accent-green); }
+        .fill-amber { background: var(--accent-gold); }
+        .fill-red { background: var(--accent-nepal); }
+
+        @media (max-width: 992px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.mobile-open { transform: translateX(0); }
+            .main-wrapper { margin-left: 0; width: 100%; }
+            .menu-toggle-btn { display: block !important; }
+        }
+        .menu-toggle-btn { display: none; background: none; border: none; color: var(--text-main); font-size: 22px; cursor: pointer; margin-right: 12px; }
+    </style>
+</head>
+<body>
+
+    <!-- 1. STRICT ADMIN LOGIN GATE (Visible until bhandaribimal778@gmail.com logs in) -->
+    <div id="loginGate">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="login-logo">ने</div>
+                <h2>नेपाली पजल एडमिन</h2>
+                <p>एप व्यवस्थापन र प्रत्यक्ष डेटाबेस पहुँच</p>
+                <div class="security-badge">🛡️ Super Admin Protection</div>
+            </div>
+
+            <div class="auth-error" id="loginErrorMsg"></div>
+
+            <form onsubmit="event.preventDefault(); submitAdminLogin();">
+                <div class="form-group">
+                    <label>एडमिन इमेल (Email Address):</label>
+                    <input type="email" class="form-control" id="loginEmail" value="bhandaribimal778@gmail.com" required placeholder="admin@example.com">
+                </div>
+
+                <div class="form-group">
+                    <label>पासवर्ड (Password):</label>
+                    <input type="password" class="form-control" id="loginPassword" required placeholder="••••••••" minlength="6">
+                </div>
+
+                <button type="submit" class="login-btn" id="btnLoginSubmit">
+                    🔐 एडमिन लगइन गर्नुहोस् (Admin Login)
+                </button>
+            </form>
+
+            <div style="margin-top: 20px; text-align: center; border-top: 1px solid var(--border-color); padding-top: 16px; font-size: 13px;">
+                <a href="#" onclick="handleForgotPassword(); return false;" style="color: var(--primary); text-decoration: none; display: block; margin-bottom: 8px;">
+                    🔑 पासवर्ड बिर्सनुभयो? (Forgot Password)
+                </a>
+                <a href="#" id="toggleAccountModeLink" onclick="toggleAccountMode(); return false;" style="color: #94a3b8; text-decoration: underline; font-size: 12px;">
+                    पहिलो पटक हो? नयाँ एडमिन पासवर्ड बनाउनुहोस् (Set Admin Password)
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. FULL ADMIN DASHBOARD (Completely hidden until login verification) -->
+    <div id="adminApp">
+        <!-- SIDEBAR -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="login-logo" style="width: 38px; height: 38px; font-size: 18px; margin: 0;">ने</div>
+                <div class="logo-text">
+                    <h2>नेपाली पजल</h2>
+                    <span>Admin Console</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-menu">
+                <div class="menu-label">नियन्त्रण (NAVIGATION)</div>
+                <a class="nav-item active" data-section="overview">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+                    <span>ड्यासबोर्ड सारांश (Overview)</span>
+                </a>
+                <a class="nav-item" data-section="level-mgmt">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                    <span>स्तर व्यवस्थापन (Level Management)</span>
+                </a>
+                <a class="nav-item" data-section="quiz-mgmt">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    <span>प्रश्नोत्तरी (Quiz Management)</span>
+                </a>
+                <a class="nav-item" data-section="user-mgmt">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    <span>प्रयोगकर्ताहरू (User Management)</span>
+                </a>
+
+                <div class="menu-label">इकोसिस्टम र इन्गेजमेन्ट</div>
+                <a class="nav-item" data-section="rewards">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>
+                    <span>इनाम र क्वाइन (Rewards & Coins)</span>
+                </a>
+                <a class="nav-item" data-section="daily-challenge">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    <span>दैनिक चुनौती (Daily Challenge)</span>
+                </a>
+                <a class="nav-item" data-section="analytics">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                    <span>तथ्याङ्क र सूचना (Analytics & Push)</span>
+                </a>
+
+                <div class="menu-label">सुरक्षा र प्रणाली</div>
+                <a class="nav-item" data-section="backup">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    <span>ब्याकअप र रिस्टोर (Backup & Restore)</span>
+                </a>
+                <a class="nav-item" data-section="security">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    <span>सुरक्षा र अडिट (Security & Roles)</span>
+                </a>
+            </nav>
+
+            <!-- AUTHENTICATED ADMIN ONLY -->
+            <div class="sidebar-footer">
+                <div class="user-avatar">बिमल</div>
+                <div class="user-info">
+                    <h4>बिमल भण्डारी</h4>
+                    <p>Super Admin 🟢 अनलाइन</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN WRAPPER -->
+        <div class="main-wrapper">
+            <header class="top-header">
+                <div class="header-title">
+                    <button class="menu-toggle-btn" id="menuToggle">☰</button>
+                    <h1 id="pageTitle">ड्यासबोर्ड सारांश (Overview)</h1>
+                    <span class="live-status-pill">🟢 Live Firebase Connected</span>
+                </div>
+                <div class="header-actions">
+                    <button class="action-btn" onclick="refreshLiveData()">🔄 Refresh</button>
+                    <button class="action-btn btn-danger" onclick="logoutAdmin()">🚪 Sign Out</button>
+                </div>
+            </header>
+
+            <main class="content-body">
+                <!-- OVERVIEW -->
+                <section id="overview" class="page-section active">
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <span class="metric-title">वास्तविक प्रयोगकर्ता (Firestore Users)</span>
+                                <div class="metric-icon blue">👥</div>
+                            </div>
+                            <div class="metric-value" id="cardTotalUsers">Loading...</div>
+                            <div class="metric-sub">▲ मोबाइल एपमा दर्ता खेलाडीहरू</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <span class="metric-title">सक्रिय प्रयोगकर्ता (Active Today)</span>
+                                <div class="metric-icon green">⚡</div>
+                            </div>
+                            <div class="metric-value" id="cardActiveUsers">3,820</div>
+                            <div class="metric-sub">▲ दैनिक खेल गतिविधि</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <span class="metric-title">खेलिएका Level (Levels Played)</span>
+                                <div class="metric-icon amber">🎮</div>
+                            </div>
+                            <div class="metric-value" id="cardLevelsPlayed">Loading...</div>
+                            <div class="metric-sub">Firestore Sessions Aggregate</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <span class="metric-title">Quiz प्रश्न संख्या (Live Quizzes)</span>
+                                <div class="metric-icon purple">🎯</div>
+                            </div>
+                            <div class="metric-value" id="cardQuizCount">Loading...</div>
+                            <div class="metric-sub">एपमा तुरुन्तै उपलब्ध</div>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+                        <div class="panel">
+                            <div class="panel-header">
+                                <h3>दैनिक खेल गतिविधि (Daily Gameplay Activity)</h3>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 16px;">
+                                <div>
+                                    <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px;">
+                                        <span>अंक अनुक्रम (Number Sequence)</span>
+                                        <span style="font-weight: 700;">३२,४०० खेलहरू (३८%)</span>
+                                    </div>
+                                    <div class="progress-bar-bg"><div class="progress-bar-fill fill-blue" style="width: 38%;"></div></div>
+                                </div>
+                                <div>
+                                    <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px;">
+                                        <span>प्रश्नोत्तरी (Quiz Zone)</span>
+                                        <span style="font-weight: 700;">२५,६०० खेलहरू (३०%)</span>
+                                    </div>
+                                    <div class="progress-bar-bg"><div class="progress-bar-fill fill-green" style="width: 30%;"></div></div>
+                                </div>
+                                <div>
+                                    <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px;">
+                                        <span>स्लाइडिङ पजल (Sliding Number Puzzle)</span>
+                                        <span style="font-weight: 700;">१६,८०० खेलहरू (२०%)</span>
+                                    </div>
+                                    <div class="progress-bar-bg"><div class="progress-bar-fill fill-amber" style="width: 20%;"></div></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel">
+                            <div class="panel-header"><h3>द्रुत कार्यहरू (Quick Actions)</h3></div>
+                            <div style="display: flex; flex-direction: column; gap: 10px;">
+                                <button class="action-btn btn-primary" onclick="switchSection('level-mgmt'); openLevelModal();">+ नयाँ Level थप्नुहोस्</button>
+                                <button class="action-btn" onclick="switchSection('quiz-mgmt')">+ नयाँ Quiz प्रश्न थप्नुहोस्</button>
+                                <button class="action-btn" onclick="switchSection('daily-challenge')">🎯 आजको Daily Challenge सेट</button>
+                                <button class="action-btn" onclick="exportData()">📦 सम्पूर्ण डाटा ब्याकअप लिनुहोस्</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- LEVEL MANAGEMENT -->
+                <section id="level-mgmt" class="page-section">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3>Level व्यवस्थापन (Firestore Live Levels)</h3>
+                            <button class="action-btn btn-primary" onclick="openLevelModal()">+ नयाँ Level थप्नुहोस्</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table id="levelTable">
+                                <thead>
+                                    <tr><th>Level No.</th><th>गेम प्रकार</th><th>कठिनाइ</th><th>शर्त</th><th>इनाम</th><th>स्थिति</th><th>कार्य</th></tr>
+                                </thead>
+                                <tbody id="levelTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- QUIZ MANAGEMENT -->
+                <section id="quiz-mgmt" class="page-section">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3>नयाँ Quiz प्रश्न थप्नुहोस् (Live Mobile App Sync)</h3>
+                        </div>
+                        <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">
+                            यहाँ तपाईंले थपेका हरेक प्रश्नहरू सिधै Cloud Firestore को <code>quizzes</code> मा सुरक्षित हुन्छन् र खेलाडीहरूले मोबाइल एप खोल्दा तुरुन्तै देखिन्छन्।
+                        </p>
+                        <form onsubmit="event.preventDefault(); addQuizQuestion();">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>Category</label>
+                                    <select class="form-control" id="quizCat">
+                                        <option value="nepal_gk">नेपाल सामान्य ज्ञान (Nepal GK)</option>
+                                        <option value="nepal_history">इतिहास र संस्कृति (History & Culture)</option>
+                                        <option value="science_tech">विज्ञान र प्रविधि (Science & Tech)</option>
+                                        <option value="math_logic">गणित र तर्कशक्ति (Math & Logic)</option>
+                                        <option value="nepali_lang">नेपाली भाषा र व्याकरण (Nepali Language)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>कठिनाइ स्तर</label>
+                                    <select class="form-control" id="quizDiff">
+                                        <option>सजिलो (Easy)</option><option selected>मध्यम (Medium)</option><option>गाह्रो (Hard)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-grid">
+                                <div class="form-group"><label>प्रश्न (नेपालीमा):</label><textarea class="form-control" id="qNe" required placeholder="उदा: नेपालको सबैभन्दा अग्लो हिमाल कुन हो?"></textarea></div>
+                                <div class="form-group"><label>Question (In English):</label><textarea class="form-control" id="qEn" required placeholder="E.g., Which is the highest mountain peak in Nepal?"></textarea></div>
+                            </div>
+                            <div class="form-grid" style="grid-template-columns: repeat(2, 1fr);">
+                                <div class="form-group"><label>विकल्प १ (Option A)</label><input type="text" class="form-control" id="optA" required placeholder="सगरमाथा (Mt. Everest)"></div>
+                                <div class="form-group"><label>विकल्प २ (Option B)</label><input type="text" class="form-control" id="optB" required placeholder="कञ्चनजङ्घा (Kanchenjunga)"></div>
+                                <div class="form-group"><label>विकल्प ३ (Option C)</label><input type="text" class="form-control" id="optC" required placeholder="ल्होत्से (Lhotse)"></div>
+                                <div class="form-group"><label>विकल्प ४ (Option D)</label><input type="text" class="form-control" id="optD" required placeholder="मकालु (Makalu)"></div>
+                            </div>
+                            <div class="form-grid">
+                                <div class="form-group"><label>सही उत्तर (Correct Option)</label><select class="form-control" id="correctOpt"><option value="A">विकल्प १ (A)</option><option value="B">विकल्प २ (B)</option><option value="C">विकल्प ३ (C)</option><option value="D">विकल्प ४ (D)</option></select></div>
+                                <div class="form-group"><label>व्याख्या (Explanation):</label><input type="text" class="form-control" id="quizExp" placeholder="सगरमाथा ८,८४८.८६ मिटर अग्लो छ।"></div>
+                            </div>
+                            <button type="submit" class="action-btn btn-primary">+ Cloud मा Publish गर्नुहोस् (Mobile App Live)</button>
+                        </form>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3>Firestore मा सुरक्षित Quiz प्रश्नहरू</h3>
+                        </div>
+                        <div class="table-responsive">
+                            <table id="savedQuizTable">
+                                <thead><tr><th>प्रश्न (Question)</th><th>Category</th><th>सही उत्तर</th><th>कठिनाइ</th><th>कार्य</th></tr></thead>
+                                <tbody id="quizTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- USER MANAGEMENT -->
+                <section id="user-mgmt" class="page-section">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3>प्रयोगकर्ता सूची र प्रगति (Live Mobile App Users)</h3>
+                            <input type="text" class="form-control" placeholder="खोजी गर्नुहोस्..." onkeyup="filterUsers(this.value)" style="width: 220px;">
+                        </div>
+                        <div class="table-responsive">
+                            <table id="userTable">
+                                <thead><tr><th>नाम</th><th>इमेल (Google Auth)</th><th>Level प्रगति</th><th>क्वाइन</th><th>Total Solved</th><th>स्थिति</th><th>कार्य</th></tr></thead>
+                                <tbody id="userTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- REWARDS & COINS -->
+                <section id="rewards" class="page-section">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3>इनाम र क्वाइन नियमहरू (Live Firestore Economy Config)</h3>
+                            <button class="action-btn btn-primary" onclick="saveEconomyConfig()">Cloud मा सेभ गर्नुहोस्</button>
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-group"><label>प्रति Level पूरा गर्दा पाउने क्वाइन:</label><input type="number" class="form-control" id="cfgBaseCoins" value="25"></div>
+                            <div class="form-group"><label>संकेत (Hint) को मूल्य (Coins):</label><input type="number" class="form-control" id="cfgHintCost" value="10"></div>
+                            <div class="form-group"><label>दैनिक Streak बोनस:</label><input type="number" class="form-control" id="cfgStreakReward" value="15"></div>
+                            <div class="form-group"><label>भिडियो विज्ञापन इनाम (Rewarded Ad):</label><input type="number" class="form-control" id="cfgAdReward" value="50"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- DAILY CHALLENGE -->
+                <section id="daily-challenge" class="page-section">
+                    <div class="panel">
+                        <div class="panel-header"><h3>दैनिक चुनौती (Daily Challenge Setup)</h3></div>
+                        <form onsubmit="event.preventDefault(); saveDailyChallenge();">
+                            <div class="form-grid">
+                                <div class="form-group"><label>मिति</label><input type="date" class="form-control" id="challengeDate"></div>
+                                <div class="form-group"><label>चुनौती खेल</label><select class="form-control" id="challengeMode"><option>विशेष अंक अनुक्रम</option><option>कठिन ४x४ स्लाइडिङ पजल</option><option>नेपाली संस्कृति द्रुत क्विज</option></select></div>
+                                <div class="form-group"><label>समय सिमा (Seconds)</label><input type="number" class="form-control" id="challengeTimer" value="90"></div>
+                                <div class="form-group"><label>इनाम (Coins)</label><input type="number" class="form-control" id="challengeReward" value="100"></div>
+                            </div>
+                            <button type="submit" class="action-btn btn-primary">🎯 चुनौती Firestore मा Publish गर्नुहोस्</button>
+                        </form>
+                    </div>
+                </section>
+
+                <!-- ANALYTICS & NOTIFICATIONS -->
+                <section id="analytics" class="page-section">
+                    <div class="panel">
+                        <div class="panel-header"><h3>पुस सूचना प्रसारण (Push Notifications)</h3></div>
+                        <form onsubmit="event.preventDefault(); sendBroadcastNotice();">
+                            <div class="form-group" style="margin-bottom: 12px;"><label>शीर्षक (Title):</label><input type="text" class="form-control" id="notifTitle" placeholder="आजको नयाँ चुनौती आयो!" required></div>
+                            <div class="form-group" style="margin-bottom: 12px;"><label>सन्देश (Message):</label><textarea class="form-control" id="notifMsg" placeholder="आफ्नो दैनिक Streak बचाउनुहोस् र १०० बोनस क्वाइन जित्नुहोस्!" required></textarea></div>
+                            <button type="submit" class="action-btn btn-primary">🚀 तत्काल प्रसारण गर्नुहोस् (Send Broadcast)</button>
+                        </form>
+                    </div>
+                </section>
+
+                <!-- BACKUP & RESTORE -->
+                <section id="backup" class="page-section">
+                    <div class="panel">
+                        <div class="panel-header"><h3>Cloud Firestore ब्याकअप र रिस्टोर</h3></div>
+                        <p style="color: var(--text-muted); margin-bottom: 20px;">
+                            यहाँबाट तपाइँ आफ्ना प्रत्यक्ष Firestore डेटाबेस (Users, Levels, Quizzes, Config) लाई एकल JSON फाइलमा डाउनलोड गर्न सक्नुहुन्छ।
+                        </p>
+                        <div style="display: flex; gap: 20px;">
+                            <button class="action-btn btn-primary" onclick="exportData()">Download Full Database JSON</button>
+                            <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importData(event)">
+                            <button class="action-btn" onclick="document.getElementById('importFile').click()">Choose JSON File to Restore</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECURITY & ADMIN ROLES -->
+                <section id="security" class="page-section">
+                    <div class="panel">
+                        <div class="panel-header"><h3>सुरक्षा र एडमिन अनुमति (Zero-Trust Rules)</h3></div>
+                        <div class="table-responsive">
+                            <table>
+                                <thead><tr><th>एडमिनको नाम</th><th>भूमिका (Role)</th><th>इमेल</th><th>स्थिति</th></tr></thead>
+                                <tbody>
+                                    <tr><td><strong>बिमल भण्डारी</strong></td><td>Super Admin (Full Access)</td><td>bhandaribimal778@gmail.com</td><td><span class="status-badge published">Active Owner</span></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-header"><h3>लाइभ अडिट लग (Firestore Audit Stream)</h3></div>
+                        <div class="table-responsive">
+                            <table>
+                                <thead><tr><th>समय</th><th>एडमिन</th><th>कार्य</th><th>स्थिति</th></tr></thead>
+                                <tbody id="auditTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- LEVEL MODAL -->
+    <div class="modal-overlay" id="levelModal">
+        <div class="modal-container">
+            <div class="modal-header"><h3>नयाँ Level थप्नुहोस् (Add Level to Firestore)</h3><button class="close-modal" onclick="closeLevelModal()">&times;</button></div>
+            <form onsubmit="event.preventDefault(); saveNewLevel();">
+                <div class="form-group" style="margin-bottom: 12px;"><label>Level No:</label><input type="number" class="form-control" id="mLevelNum" value="1" required></div>
+                <div class="form-group" style="margin-bottom: 12px;"><label>गेम प्रकार:</label><select class="form-control" id="mGameMode"><option value="Number Sequence">अंक अनुक्रम (Number Sequence)</option><option value="Sliding Puzzle">स्लाइडिङ पजल (Sliding Puzzle)</option><option value="Matching">जोडा मिलाउने (Matching)</option><option value="Brain Teasers">दिमागी कसरत (Brain Teasers)</option></select></div>
+                <div class="form-group" style="margin-bottom: 12px;"><label>कठिनाइ:</label><select class="form-control" id="mDiff"><option value="सजिलो (Easy)">सजिलो (Easy)</option><option value="मध्यम (Medium)">मध्यम (Medium)</option><option value="गाह्रो (Hard)">गाह्रो (Hard)</option></select></div>
+                <div class="form-group" style="margin-bottom: 12px;"><label>शर्त:</label><input type="text" class="form-control" id="mTarget" placeholder="५ प्रश्न १००% सही हल" required></div>
+                <div class="form-group" style="margin-bottom: 20px;"><label>इनाम क्वाइन:</label><input type="number" class="form-control" id="mCoins" value="30"></div>
+                <button type="submit" class="action-btn btn-primary">+ Firestore मा सेभ गर्नुहोस्</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="toast" id="toastMsg"><span id="toastText">सफल भयो!</span></div>
+
+    <!-- FIREBASE AND APP SCRIPT -->
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCVkBBUCPypY24ktt9rWDtlMDJS4Gdd84c",
+            authDomain: "nepali-puzzle.firebaseapp.com",
+            projectId: "nepali-puzzle",
+            storageBucket: "nepali-puzzle.firebasestorage.app",
+            messagingSenderId: "666680534459",
+            appId: "1:666680534459:web:admin"
+        };
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        const SUPER_ADMIN_EMAIL = "bhandaribimal778@gmail.com";
+        let isRegisterMode = false;
+
+        // 1. STRICT AUTH STATE MONITORING
+        auth.onAuthStateChanged(user => {
+            const loginGate = document.getElementById('loginGate');
+            const adminApp = document.getElementById('adminApp');
+
+            if (user && user.email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase()) {
+                // Logged in as Super Admin: Hide gate, Reveal full dashboard
+                loginGate.style.display = 'none';
+                adminApp.style.display = 'flex';
+                bindFirestoreListeners();
+                logAuditAction("Super Admin Session Active");
+            } else if (user) {
+                // Other user: Block access
+                auth.signOut();
+                showLoginError("अस्वीकृत: केवल Super Admin (" + SUPER_ADMIN_EMAIL + ") खातालाई मात्र यो ड्यासबोर्ड खोल्ने अनुमति छ।");
+                loginGate.style.display = 'flex';
+                adminApp.style.display = 'none';
+            } else {
+                // Not logged in: Show gate only
+                loginGate.style.display = 'flex';
+                adminApp.style.display = 'none';
+            }
+        });
+
+        // 2. SUBMIT LOGIN
+        function submitAdminLogin() {
+            const email = document.getElementById('loginEmail').value.trim();
+            const pass = document.getElementById('loginPassword').value;
+            const btn = document.getElementById('btnLoginSubmit');
+            const errDiv = document.getElementById('loginErrorMsg');
+
+            errDiv.style.display = 'none';
+            btn.disabled = true;
+            btn.textContent = "प्रमाणीकरण गरिंदैछ...";
+
+            if (isRegisterMode) {
+                auth.createUserWithEmailAndPassword(email, pass)
+                    .then(res => {
+                        showToast("नयाँ एडमिन खाता सिर्जना भयो र लगइन सफल!");
+                    })
+                    .catch(err => {
+                        showLoginError(translateError(err.code, err.message));
+                    })
+                    .finally(() => {
+                        btn.disabled = false;
+                        btn.textContent = "खाता बनाउनुहोस् (Register & Login)";
+                    });
+            } else {
+                auth.signInWithEmailAndPassword(email, pass)
+                    .then(res => {
+                        showToast("स्वागत छ, बिमल भण्डारी!");
+                    })
+                    .catch(err => {
+                        showLoginError(translateError(err.code, err.message));
+                    })
+                    .finally(() => {
+                        btn.disabled = false;
+                        btn.textContent = "🔐 एडमिन लगइन गर्नुहोस् (Admin Login)";
+                    });
+            }
+        }
+
+        function toggleAccountMode() {
+            isRegisterMode = !isRegisterMode;
+            const btn = document.getElementById('btnLoginSubmit');
+            const link = document.getElementById('toggleAccountModeLink');
+            if (isRegisterMode) {
+                btn.textContent = "खाता बनाउनुहोस् (Register & Login)";
+                link.textContent = "पहिले नै खाता छ? लगइन गर्नुहोस् (Back to Sign In)";
+            } else {
+                btn.textContent = "🔐 एडमिन लगइन गर्नुहोस् (Admin Login)";
+                link.textContent = "पहिलो पटक हो? नयाँ एडमिन पासवर्ड बनाउनुहोस् (Set Admin Password)";
+            }
+        }
+
+        function handleForgotPassword() {
+            const email = document.getElementById('loginEmail').value.trim();
+            if (!email) {
+                alert("कृपया इमेल प्रविष्ट गर्नुहोस्।");
+                return;
+            }
+            auth.sendPasswordResetEmail(email)
+                .then(() => alert("पासवर्ड रिसेट लिंक " + email + " मा पठाइयो! आफ्नो इनबक्स जाँच गर्नुहोस्।"))
+                .catch(err => showLoginError(err.message));
+        }
+
+        function showLoginError(msg) {
+            const errDiv = document.getElementById('loginErrorMsg');
+            errDiv.style.display = 'block';
+            errDiv.innerHTML = msg;
+        }
+
+        function logoutAdmin() {
+            if (confirm("के तपाइँ एडमिन ड्यासबोर्डबाट बाहिरिन निश्चित हुनुहुन्छ?")) {
+                auth.signOut().then(() => {
+                    showToast("लगआउट सफल भयो!");
+                });
+            }
+        }
+
+        function translateError(code, message) {
+            switch(code) {
+                case 'auth/wrong-password':
+                case 'auth/invalid-credential':
+                    return "गलत पासवर्ड! कृपया सही पासवर्ड प्रविष्ट गर्नुहोस्।";
+                case 'auth/user-not-found':
+                    return "यो इमेलको खाता भेटिएन। यदि पहिलो पटक पासवर्ड बनाउँदै हुनुहुन्छ भने तल 'नयाँ एडमिन पासवर्ड बनाउनुहोस्' मा थिच्नुहोस्।";
+                case 'auth/invalid-email':
+                    return "अमान्य इमेल ठेगाना।";
+                case 'auth/email-already-in-use':
+                    return "यो इमेल पहिले नै दर्ता छ। सिधै लगइन गर्नुहोस्।";
+                case 'auth/weak-password':
+                    return "पासवर्ड कम्तिमा ६ अक्षर वा अंकको हुनुपर्छ।";
+                default:
+                    return message;
+            }
+        }
+
+        // 3. REALTIME FIRESTORE DATA LISTENERS
+        function bindFirestoreListeners() {
+            // Users
+            db.collection("users").onSnapshot(snapshot => {
+                const total = snapshot.size;
+                document.getElementById('cardTotalUsers').textContent = total.toLocaleString('ne-NP');
+
+                let totalSolved = 0;
+                let userRows = '';
+                snapshot.forEach(doc => {
+                    const u = doc.data();
+                    totalSolved += (u.totalSolved || 0);
+                    const isDis = u.disabled === true;
+                    userRows += `
+                        <tr>
+                            <td><strong>${u.displayName || 'खेलाडी'}</strong></td>
+                            <td>${u.email || 'Google User'}</td>
+                            <td>Level ${u.level || 1}</td>
+                            <td>🪙 ${(u.coins || 0).toLocaleString()}</td>
+                            <td>${u.totalSolved || 0} खेल</td>
+                            <td><span class="status-badge ${isDis ? 'disabled' : 'active'}">${isDis ? 'निष्क्रिय' : 'सक्रिय'}</span></td>
+                            <td>
+                                <button class="action-btn ${isDis ? 'btn-primary' : 'btn-danger'}" onclick="toggleLiveUser('${doc.id}', ${!isDis})">
+                                    ${isDis ? 'सक्रिय गर्नुहोस्' : 'रोक्नुहोस्'}
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                if (snapshot.empty) {
+                    userRows = `<tr><td colspan="7" style="text-align:center; color: var(--text-muted);">कुनै प्रयोगकर्ता भेटिएन (नयाँ खेलाडी एपमा लगइन भएपछि यहाँ स्वतः देखिनेछन्)।</td></tr>`;
+                }
+                document.getElementById('userTableBody').innerHTML = userRows;
+                document.getElementById('cardLevelsPlayed').textContent = totalSolved.toLocaleString('ne-NP');
+            }, err => console.warn(err));
+
+            // Quizzes
+            db.collection("quizzes").onSnapshot(snapshot => {
+                document.getElementById('cardQuizCount').textContent = snapshot.size;
+                let quizRows = '';
+                snapshot.forEach(doc => {
+                    const q = doc.data();
+                    quizRows += `
+                        <tr>
+                            <td><strong>${q.questionNe || q.question}</strong><br><small style="color:var(--text-muted);">${q.questionEn || ''}</small></td>
+                            <td>${q.category || 'नेपाल GK'}</td>
+                            <td><span class="status-badge published">${q.correctOption || 'A'}</span></td>
+                            <td>${q.difficulty || 'मध्यम'}</td>
+                            <td><button class="action-btn btn-danger" onclick="deleteQuizDoc('${doc.id}')">मेटाउनुहोस्</button></td>
+                        </tr>
+                    `;
+                });
+                if (snapshot.empty) {
+                    quizRows = `<tr><td colspan="5" style="text-align:center; color: var(--text-muted);">Firestore मा कुनै प्रश्न छैन। माथिको फारमबाट नयाँ प्रश्न थप्नुहोस्!</td></tr>`;
+                }
+                document.getElementById('quizTableBody').innerHTML = quizRows;
+            }, err => console.warn(err));
+
+            // Levels
+            db.collection("levels").onSnapshot(snapshot => {
+                let lvlRows = '';
+                snapshot.forEach(doc => {
+                    const l = doc.data();
+                    lvlRows += `
+                        <tr>
+                            <td><strong>Level ${l.levelNumber || 1}</strong></td>
+                            <td>${l.mode || 'Number Sequence'}</td>
+                            <td><span style="color: #38bdf8; font-weight:600;">${l.difficulty || 'मध्यम'}</span></td>
+                            <td>${l.target || '५ प्रश्न हल'}</td>
+                            <td>+${l.coins || 20} क्वाइन</td>
+                            <td><span class="status-badge published">Published</span></td>
+                            <td><button class="action-btn btn-danger" onclick="deleteLevelDoc('${doc.id}')">मेटाउनुहोस्</button></td>
+                        </tr>
+                    `;
+                });
+                if (snapshot.empty) {
+                    lvlRows = `<tr><td colspan="7" style="text-align:center; color:var(--text-muted);">कुनै level छैन। '+ नयाँ Level थप्नुहोस्' थिचेर थप्नुहोस्।</td></tr>`;
+                }
+                document.getElementById('levelTableBody').innerHTML = lvlRows;
+            }, err => console.warn(err));
+
+            // Audit Logs
+            db.collection("audit_logs").orderBy("createdAt", "desc").limit(10).onSnapshot(snapshot => {
+                let logHtml = '';
+                snapshot.forEach(doc => {
+                    const l = doc.data();
+                    const d = l.createdAt ? new Date(l.createdAt.toDate ? l.createdAt.toDate() : l.createdAt) : new Date();
+                    logHtml += `<tr><td>${d.toLocaleDateString()} ${d.toLocaleTimeString()}</td><td>${l.adminEmail || 'Super Admin'}</td><td>${l.action}</td><td><span class="status-badge published">सफल</span></td></tr>`;
+                });
+                document.getElementById('auditTableBody').innerHTML = logHtml;
+            }, () => {});
+        }
+
+        // SAVE QUIZ TO FIRESTORE (Mobile App live sync)
+        function addQuizQuestion() {
+            const qNe = document.getElementById('qNe').value;
+            const qEn = document.getElementById('qEn').value;
+            const cat = document.getElementById('quizCat').value;
+            const diff = document.getElementById('quizDiff').value;
+            const optA = document.getElementById('optA').value;
+            const optB = document.getElementById('optB').value;
+            const optC = document.getElementById('optC').value;
+            const optD = document.getElementById('optD').value;
+            const correctOpt = document.getElementById('correctOpt').value;
+            const exp = document.getElementById('quizExp').value;
+
+            const payload = {
+                questionNe: qNe,
+                questionEn: qEn,
+                category: cat,
+                difficulty: diff,
+                options: [optA, optB, optC, optD],
+                correctOption: correctOpt,
+                explanation: exp,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            db.collection("quizzes").add(payload)
+                .then(() => {
+                    showToast("नयाँ Quiz प्रश्न सुरक्षित भयो! मोबाइल एपमा अब उपलब्ध छ।");
+                    document.getElementById('qNe').value = '';
+                    document.getElementById('qEn').value = '';
+                    logAuditAction("नयाँ Quiz थपियो: " + qNe.substring(0, 30));
+                })
+                .catch(err => alert("Error: " + err.message));
+        }
+
+        function deleteQuizDoc(id) {
+            if (confirm("के यो Quiz प्रश्न हटाउन निश्चित हुनुहुन्छ?")) {
+                db.collection("quizzes").doc(id).delete()
+                    .then(() => showToast("प्रश्न हटाइयो!"))
+                    .catch(e => alert(e.message));
+            }
+        }
+
+        // SAVE LEVEL
+        function saveNewLevel() {
+            const num = parseInt(document.getElementById('mLevelNum').value, 10);
+            const mode = document.getElementById('mGameMode').value;
+            const diff = document.getElementById('mDiff').value;
+            const target = document.getElementById('mTarget').value;
+            const coins = parseInt(document.getElementById('mCoins').value, 10);
+
+            const payload = {
+                levelNumber: num,
+                mode: mode,
+                difficulty: diff,
+                target: target,
+                coins: coins,
+                published: true,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            db.collection("levels").add(payload)
+                .then(() => {
+                    closeLevelModal();
+                    showToast(`Level ${num} सुरक्षित भयो!`);
+                    logAuditAction(`Level ${num} थपियो (${mode})`);
+                })
+                .catch(err => alert("Error: " + err.message));
+        }
+
+        function deleteLevelDoc(id) {
+            if (confirm("के यो Level हटाउन निश्चित हुनुहुन्छ?")) {
+                db.collection("levels").doc(id).delete()
+                    .then(() => showToast("Level हटाइयो!"))
+                    .catch(e => alert(e.message));
+            }
+        }
+
+        // TOGGLE LIVE USER
+        function toggleLiveUser(userId, disableFlag) {
+            db.collection("users").doc(userId).update({
+                disabled: disableFlag
+            }).then(() => {
+                showToast("प्रयोगकर्ता स्थिति अपडेट भयो!");
+                logAuditAction(`User ${userId} status: ${disableFlag ? 'Disabled' : 'Enabled'}`);
+            }).catch(e => alert("Error: " + e.message));
+        }
+
+        // ECONOMY CONFIG
+        function saveEconomyConfig() {
+            const baseCoins = parseInt(document.getElementById('cfgBaseCoins').value, 10);
+            const hintCost = parseInt(document.getElementById('cfgHintCost').value, 10);
+            const streak = parseInt(document.getElementById('cfgStreakReward').value, 10);
+            const adReward = parseInt(document.getElementById('cfgAdReward').value, 10);
+
+            db.collection("game_config").doc("economy").set({
+                baseCoins, hintCost, streakReward: streak, rewardedAdReward: adReward,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true })
+            .then(() => {
+                showToast("क्वाइन नियमहरू प्रत्यक्ष Cloud Firestore मा सुरक्षित गरियो!");
+                logAuditAction("क्वाइन नियम अपडेट");
+            })
+            .catch(e => alert(e.message));
+        }
+
+        // DAILY CHALLENGE
+        function saveDailyChallenge() {
+            const date = document.getElementById('challengeDate').value;
+            const mode = document.getElementById('challengeMode').value;
+            const timer = parseInt(document.getElementById('challengeTimer').value, 10);
+            const reward = parseInt(document.getElementById('challengeReward').value, 10);
+
+            db.collection("game_config").doc("daily_challenge").set({
+                date, mode, timeSeconds: timer, rewardCoins: reward,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true })
+            .then(() => {
+                showToast("दैनिक चुनौती Firestore मा सेभ भयो!");
+                logAuditAction("दैनिक चुनौती सेट: " + date);
+            })
+            .catch(e => alert(e.message));
+        }
+
+        function logAuditAction(action) {
+            db.collection("audit_logs").add({
+                adminEmail: SUPER_ADMIN_EMAIL,
+                action: action,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            }).catch(() => {});
+        }
+
+        // EXPORT DATA (Full Firestore Backup)
+        async function exportData() {
+            showToast("Firestore बाट डाटा संकलन गरिंदैछ...");
+            try {
+                const usersSnap = await db.collection("users").get();
+                const quizzesSnap = await db.collection("quizzes").get();
+                const levelsSnap = await db.collection("levels").get();
+                const configSnap = await db.collection("game_config").get();
+
+                const exportObj = {
+                    exportedAt: new Date().toISOString(),
+                    projectId: "nepali-puzzle",
+                    users: usersSnap.docs.map(d => ({ id: d.id, ...d.data() })),
+                    quizzes: quizzesSnap.docs.map(d => ({ id: d.id, ...d.data() })),
+                    levels: levelsSnap.docs.map(d => ({ id: d.id, ...d.data() })),
+                    game_config: configSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+                };
+
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj, null, 2));
+                const a = document.createElement('a');
+                a.href = dataStr;
+                a.download = "nepali_puzzle_backup_" + Date.now() + ".json";
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                showToast("ब्याकअप JSON डाउनलोड भयो!");
+            } catch(e) {
+                alert("Export error: " + e.message);
+            }
+        }
+
+        function refreshLiveData() {
+            showToast("डाटा ताजा गरिंदैछ...");
+            bindFirestoreListeners();
+        }
+
+        // NAVIGATION TABS
+        document.getElementById('challengeDate').valueAsDate = new Date();
+        const navItems = document.querySelectorAll('.sidebar-menu .nav-item');
+        const sections = document.querySelectorAll('.page-section');
+        const pageTitle = document.getElementById('pageTitle');
+
+        const sectionNames = {
+            'overview': 'ड्यासबोर्ड सारांश (Overview)',
+            'level-mgmt': 'स्तर व्यवस्थापन (Level Management)',
+            'quiz-mgmt': 'प्रश्नोत्तरी (Quiz Management)',
+            'user-mgmt': 'प्रयोगकर्ताहरू (User Management)',
+            'rewards': 'इनाम र क्वाइन (Rewards & Coins)',
+            'daily-challenge': 'दैनिक चुनौती (Daily Challenge)',
+            'analytics': 'तथ्याङ्क र सूचना (Analytics & Push)',
+            'backup': 'ब्याकअप र रिस्टोर (Backup & Restore)',
+            'security': 'सुरक्षा र अडिट (Security & Roles)'
+        };
+
+        function switchSection(secId) {
+            navItems.forEach(item => item.classList.toggle('active', item.getAttribute('data-section') === secId));
+            sections.forEach(sec => sec.classList.toggle('active', sec.id === secId));
+            if (sectionNames[secId]) pageTitle.textContent = sectionNames[secId];
+            document.getElementById('sidebar').classList.remove('mobile-open');
+        }
+
+        navItems.forEach(item => item.addEventListener('click', () => switchSection(item.getAttribute('data-section'))));
+        document.getElementById('menuToggle').addEventListener('click', () => document.getElementById('sidebar').classList.toggle('mobile-open'));
+
+        function showToast(msg) {
+            const toast = document.getElementById('toastMsg');
+            document.getElementById('toastText').textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3500);
+        }
+
+        function openLevelModal() { document.getElementById('levelModal').classList.add('open'); }
+        function closeLevelModal() { document.getElementById('levelModal').classList.remove('open'); }
+        function filterUsers(query) {
+            const rows = document.querySelectorAll('#userTableBody tr');
+            rows.forEach(r => {
+                r.style.display = r.innerText.toLowerCase().includes(query.toLowerCase()) ? '' : 'none';
+            });
+        }
+    </script>
+</body>
+</html>
