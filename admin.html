@@ -768,6 +768,51 @@
         </div>
     </div>
 
+    <!-- USER EDIT & MANAGEMENT MODAL -->
+    <div class="modal-overlay" id="userEditModal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3>खेलाडी व्यवस्थापन (Manage Player)</h3>
+                <button class="close-modal" id="btnCloseUserEditModal">&times;</button>
+            </div>
+            <form id="userEditModalForm">
+                <input type="hidden" id="editUserId">
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; margin-bottom: 16px;">
+                    <div style="font-size: 16px; font-weight: 700; color: var(--text-main);" id="editUserName">User Name</div>
+                    <div style="font-size: 13px; color: var(--text-muted);" id="editUserEmail">user@gmail.com</div>
+                    <div style="font-size: 11px; color: #38bdf8; font-family: monospace; word-break: break-all;" id="editUserUid">UID</div>
+                </div>
+
+                <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+                    <div class="form-group">
+                        <label>Level (स्तर):</label>
+                        <input type="number" class="form-control" id="editUserLevel" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Coins (सिक्का):</label>
+                        <input type="number" class="form-control" id="editUserCoins" min="0" required>
+                    </div>
+                </div>
+
+                <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+                    <div class="form-group">
+                        <label>XP:</label>
+                        <input type="number" class="form-control" id="editUserXp" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Total Solved (हल गरेका खेल):</label>
+                        <input type="number" class="form-control" id="editUserSolved" min="0" required>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap;">
+                    <button type="submit" class="action-btn btn-primary" style="flex: 1;">💾 परिवर्तन सुरक्षित गर्नुहोस्</button>
+                    <button type="button" class="action-btn btn-danger" id="btnResetUserProgress">🔄 प्रगति ० बनाउनुहोस् (Reset to 0)</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="toast" id="toastMsg"><span id="toastText">सफल भयो!</span></div>
 
     <!-- FIREBASE MODULAR SDK SCRIPT -->
@@ -952,16 +997,30 @@
             if (unsubAudit) unsubAudit();
 
             // A. Users from Mobile App
+            let cachedUsers = [];
             unsubUsers = onSnapshot(collection(db, "users"), (snapshot) => {
                 const total = snapshot.size;
                 document.getElementById('cardTotalUsers').textContent = total.toLocaleString('ne-NP');
                 document.getElementById('cardActiveUsers').textContent = total > 0 ? (Math.ceil(total * 0.75)).toLocaleString('ne-NP') : '०';
 
                 let totalSolved = 0;
-                let userRows = '';
+                cachedUsers = [];
                 snapshot.forEach(docSnap => {
-                    const u = docSnap.data();
+                    const u = { id: docSnap.id, ...docSnap.data() };
+                    cachedUsers.push(u);
                     totalSolved += (u.totalSolved || 0);
+                });
+
+                document.getElementById('cardLevelsPlayed').textContent = totalSolved.toLocaleString('ne-NP');
+                renderUserTable(cachedUsers);
+            }, err => {
+                console.error("Users listener error:", err);
+                document.getElementById('userTableBody').innerHTML = `<tr><td colspan="7" style="color: #f87171; text-align:center;">डेटा लोड गर्न असमर्थ: ${err.message}</td></tr>`;
+            });
+
+            function renderUserTable(users) {
+                let userRows = '';
+                users.forEach(u => {
                     const isDis = u.disabled === true;
                     userRows += `
                         <tr>
@@ -972,32 +1031,67 @@
                             <td>${u.totalSolved || 0} खेल</td>
                             <td><span class="status-badge ${isDis ? 'disabled' : 'active'}">${isDis ? 'निष्क्रिय' : 'सक्रिय'}</span></td>
                             <td>
-                                <button class="action-btn ${isDis ? 'btn-primary' : 'btn-danger'}" data-userid="${docSnap.id}" data-dis="${!isDis}">
-                                    ${isDis ? 'सक्रिय गर्नुहोस्' : 'रोक्नुहोस्'}
-                                </button>
+                                <div style="display: flex; gap: 6px;">
+                                    <button class="action-btn btn-primary btn-edit-user" data-uid="${u.id}">⚙️ सम्पादन</button>
+                                    <button class="action-btn ${isDis ? 'btn-primary' : 'btn-danger'} btn-toggle-user" data-userid="${u.id}" data-dis="${!isDis}">
+                                        ${isDis ? 'सक्रिय' : 'रोक्नुहोस्'}
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     `;
                 });
 
-                if (snapshot.empty) {
+                if (users.length === 0) {
                     userRows = `<tr><td colspan="7" style="text-align:center; color: var(--text-muted); padding: 24px;">कुनै प्रयोगकर्ता भेटिएन। प्रयोगकर्ताहरूले मोबाइल एप इन्स्टल गरी गुगलबाट लगइन गरेपछि यहाँ प्रत्यक्ष देखा पर्नेछन्।</td></tr>`;
                 }
                 document.getElementById('userTableBody').innerHTML = userRows;
-                document.getElementById('cardLevelsPlayed').textContent = totalSolved.toLocaleString('ne-NP');
 
                 // Bind toggle user buttons
-                document.querySelectorAll('#userTableBody button').forEach(btn => {
+                document.querySelectorAll('.btn-toggle-user').forEach(btn => {
                     btn.addEventListener('click', () => {
                         const uid = btn.getAttribute('data-userid');
                         const dis = btn.getAttribute('data-dis') === 'true';
                         toggleLiveUser(uid, dis);
                     });
                 });
-            }, err => {
-                console.error("Users listener error:", err);
-                document.getElementById('userTableBody').innerHTML = `<tr><td colspan="7" style="color: #f87171; text-align:center;">डेटा लोड गर्न असमर्थ: ${err.message}</td></tr>`;
-            });
+
+                // Bind edit user buttons
+                document.querySelectorAll('.btn-edit-user').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const uid = btn.getAttribute('data-uid');
+                        const u = cachedUsers.find(x => x.id === uid);
+                        if (!u) return;
+                        document.getElementById('editUserId').value = u.id;
+                        document.getElementById('editUserName').textContent = u.displayName || 'खेलाडी';
+                        document.getElementById('editUserEmail').textContent = u.email || 'Email not set';
+                        document.getElementById('editUserUid').textContent = 'UID: ' + u.id;
+                        document.getElementById('editUserLevel').value = u.level || 1;
+                        document.getElementById('editUserCoins').value = u.coins || 0;
+                        document.getElementById('editUserXp').value = u.xp || 0;
+                        document.getElementById('editUserSolved').value = u.totalSolved || 0;
+                        document.getElementById('userEditModal').classList.add('open');
+                    });
+                });
+            }
+
+            // Search filter for users
+            const userSearchEl = document.getElementById('userSearchInput');
+            if (userSearchEl) {
+                userSearchEl.addEventListener('input', (e) => {
+                    const term = e.target.value.toLowerCase().trim();
+                    if (!term) {
+                        renderUserTable(cachedUsers);
+                    } else {
+                        const filtered = cachedUsers.filter(u => 
+                            (u.displayName && u.displayName.toLowerCase().includes(term)) ||
+                            (u.email && u.email.toLowerCase().includes(term)) ||
+                            (u.id && u.id.toLowerCase().includes(term))
+                        );
+                        renderUserTable(filtered);
+                    }
+                });
+            }
 
             // B. Quizzes
             unsubQuizzes = onSnapshot(collection(db, "quizzes"), (snapshot) => {
@@ -1170,7 +1264,7 @@
             }
         }
 
-        // 8. USER STATUS TOGGLE
+        // 8. USER STATUS TOGGLE & EDIT MANAGEMENT
         async function toggleLiveUser(userId, disableFlag) {
             try {
                 await updateDoc(doc(db, "users", userId), { disabled: disableFlag });
@@ -1179,6 +1273,70 @@
             } catch (err) {
                 alert("Error: " + err.message);
             }
+        }
+
+        const userEditModal = document.getElementById('userEditModal');
+        const btnCloseUserEditModal = document.getElementById('btnCloseUserEditModal');
+        const userEditModalForm = document.getElementById('userEditModalForm');
+        const btnResetUserProgress = document.getElementById('btnResetUserProgress');
+
+        if (btnCloseUserEditModal) {
+            btnCloseUserEditModal.addEventListener('click', () => userEditModal.classList.remove('open'));
+        }
+        if (userEditModal) {
+            userEditModal.addEventListener('click', (e) => {
+                if (e.target === userEditModal) userEditModal.classList.remove('open');
+            });
+        }
+
+        if (userEditModalForm) {
+            userEditModalForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const uid = document.getElementById('editUserId').value;
+                const newLevel = parseInt(document.getElementById('editUserLevel').value, 10);
+                const newCoins = parseInt(document.getElementById('editUserCoins').value, 10);
+                const newXp = parseInt(document.getElementById('editUserXp').value, 10);
+                const newSolved = parseInt(document.getElementById('editUserSolved').value, 10);
+
+                try {
+                    await updateDoc(doc(db, "users", uid), {
+                        level: newLevel,
+                        coins: newCoins,
+                        xp: newXp,
+                        totalSolved: newSolved,
+                        updatedAt: serverTimestamp()
+                    });
+                    userEditModal.classList.remove('open');
+                    showToast("खेलाडीको Level र Coins सफलतापूर्वक अपडेट भयो! मोबाइल एपमा तुरुन्तै लागू हुनेछ।");
+                    logAuditAction(`User ${uid} level=${newLevel}, coins=${newCoins} updated by admin`);
+                } catch (err) {
+                    alert("Error: " + err.message);
+                }
+            });
+        }
+
+        if (btnResetUserProgress) {
+            btnResetUserProgress.addEventListener('click', async () => {
+                const uid = document.getElementById('editUserId').value;
+                if (!confirm("के यो प्रयोगकर्ताको सम्पूर्ण खेल प्रगति शून्य (Level 1, Coins 0, XP 0) बनाउन निश्चित हुनुहुन्छ?")) return;
+                try {
+                    await updateDoc(doc(db, "users", uid), {
+                        level: 1,
+                        coins: 0,
+                        xp: 0,
+                        dailyStreak: 0,
+                        totalSolved: 0,
+                        totalQuizzes: 0,
+                        highestScore: 0,
+                        updatedAt: serverTimestamp()
+                    });
+                    userEditModal.classList.remove('open');
+                    showToast("प्रयोगकर्ता प्रगति शून्य (Level 1, Coins 0) बनाइयो!");
+                    logAuditAction(`User ${uid} progress reset to 0 by admin`);
+                } catch (err) {
+                    alert("Error: " + err.message);
+                }
+            });
         }
 
         // 9. ECONOMY RULES
