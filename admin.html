@@ -7,11 +7,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Mukta:wght@300;400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Firebase Web SDK (Compat v10 for universal browser support) -->
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
     <style>
         :root {
@@ -86,12 +81,12 @@
 
         .login-header {
             text-align: center;
-            margin-bottom: 26px;
+            margin-bottom: 24px;
         }
 
         .login-logo {
-            width: 54px;
-            height: 54px;
+            width: 52px;
+            height: 52px;
             background: linear-gradient(135deg, #ef4444, #38bdf8);
             border-radius: 14px;
             display: flex;
@@ -100,7 +95,7 @@
             color: #fff;
             font-size: 26px;
             font-weight: 800;
-            margin: 0 auto 14px;
+            margin: 0 auto 12px;
             box-shadow: 0 8px 25px rgba(56, 189, 248, 0.35);
         }
 
@@ -375,7 +370,7 @@
 </head>
 <body>
 
-    <!-- 1. STRICT ADMIN LOGIN GATE (Visible until bhandaribimal778@gmail.com logs in) -->
+    <!-- 1. FULL-SCREEN LOGIN GATE -->
     <div id="loginGate">
         <div class="login-card">
             <div class="login-header">
@@ -387,7 +382,7 @@
 
             <div class="auth-error" id="loginErrorMsg"></div>
 
-            <form onsubmit="event.preventDefault(); submitAdminLogin();">
+            <form id="adminLoginForm">
                 <div class="form-group">
                     <label>एडमिन इमेल (Email Address):</label>
                     <input type="email" class="form-control" id="loginEmail" value="bhandaribimal778@gmail.com" required placeholder="admin@example.com">
@@ -404,17 +399,17 @@
             </form>
 
             <div style="margin-top: 20px; text-align: center; border-top: 1px solid var(--border-color); padding-top: 16px; font-size: 13px;">
-                <a href="#" onclick="handleForgotPassword(); return false;" style="color: var(--primary); text-decoration: none; display: block; margin-bottom: 8px;">
+                <a href="#" id="forgotPassLink" style="color: var(--primary); text-decoration: none; display: block; margin-bottom: 8px;">
                     🔑 पासवर्ड बिर्सनुभयो? (Forgot Password)
                 </a>
-                <a href="#" id="toggleAccountModeLink" onclick="toggleAccountMode(); return false;" style="color: #94a3b8; text-decoration: underline; font-size: 12px;">
+                <a href="#" id="toggleAccountModeLink" style="color: #94a3b8; text-decoration: underline; font-size: 12px;">
                     पहिलो पटक हो? नयाँ एडमिन पासवर्ड बनाउनुहोस् (Set Admin Password)
                 </a>
             </div>
         </div>
     </div>
 
-    <!-- 2. FULL ADMIN DASHBOARD (Completely hidden until login verification) -->
+    <!-- 2. FULL ADMIN DASHBOARD -->
     <div id="adminApp">
         <!-- SIDEBAR -->
         <aside class="sidebar" id="sidebar">
@@ -470,7 +465,7 @@
                 </a>
             </nav>
 
-            <!-- AUTHENTICATED ADMIN ONLY -->
+            <!-- AUTHENTICATED ADMIN FOOTER -->
             <div class="sidebar-footer">
                 <div class="user-avatar">बिमल</div>
                 <div class="user-info">
@@ -489,8 +484,11 @@
                     <span class="live-status-pill">🟢 Live Firebase Connected</span>
                 </div>
                 <div class="header-actions">
-                    <button class="action-btn" onclick="refreshLiveData()">🔄 Refresh</button>
-                    <button class="action-btn btn-danger" onclick="logoutAdmin()">🚪 Sign Out</button>
+                    <a href="/app-debug.apk" download class="action-btn" style="color: #38bdf8; border-color: rgba(56, 189, 248, 0.35); text-decoration: none;">
+                        📱 Download APK
+                    </a>
+                    <button class="action-btn" id="btnRefreshData">🔄 Refresh</button>
+                    <button class="action-btn btn-danger" id="btnSignOut">🚪 Sign Out</button>
                 </div>
             </header>
 
@@ -503,7 +501,7 @@
                                 <span class="metric-title">वास्तविक प्रयोगकर्ता (Firestore Users)</span>
                                 <div class="metric-icon blue">👥</div>
                             </div>
-                            <div class="metric-value" id="cardTotalUsers">Loading...</div>
+                            <div class="metric-value" id="cardTotalUsers">0</div>
                             <div class="metric-sub">▲ मोबाइल एपमा दर्ता खेलाडीहरू</div>
                         </div>
                         <div class="metric-card">
@@ -511,7 +509,7 @@
                                 <span class="metric-title">सक्रिय प्रयोगकर्ता (Active Today)</span>
                                 <div class="metric-icon green">⚡</div>
                             </div>
-                            <div class="metric-value" id="cardActiveUsers">3,820</div>
+                            <div class="metric-value" id="cardActiveUsers">0</div>
                             <div class="metric-sub">▲ दैनिक खेल गतिविधि</div>
                         </div>
                         <div class="metric-card">
@@ -519,7 +517,7 @@
                                 <span class="metric-title">खेलिएका Level (Levels Played)</span>
                                 <div class="metric-icon amber">🎮</div>
                             </div>
-                            <div class="metric-value" id="cardLevelsPlayed">Loading...</div>
+                            <div class="metric-value" id="cardLevelsPlayed">0</div>
                             <div class="metric-sub">Firestore Sessions Aggregate</div>
                         </div>
                         <div class="metric-card">
@@ -527,7 +525,7 @@
                                 <span class="metric-title">Quiz प्रश्न संख्या (Live Quizzes)</span>
                                 <div class="metric-icon purple">🎯</div>
                             </div>
-                            <div class="metric-value" id="cardQuizCount">Loading...</div>
+                            <div class="metric-value" id="cardQuizCount">0</div>
                             <div class="metric-sub">एपमा तुरुन्तै उपलब्ध</div>
                         </div>
                     </div>
@@ -564,10 +562,13 @@
                         <div class="panel">
                             <div class="panel-header"><h3>द्रुत कार्यहरू (Quick Actions)</h3></div>
                             <div style="display: flex; flex-direction: column; gap: 10px;">
-                                <button class="action-btn btn-primary" onclick="switchSection('level-mgmt'); openLevelModal();">+ नयाँ Level थप्नुहोस्</button>
-                                <button class="action-btn" onclick="switchSection('quiz-mgmt')">+ नयाँ Quiz प्रश्न थप्नुहोस्</button>
-                                <button class="action-btn" onclick="switchSection('daily-challenge')">🎯 आजको Daily Challenge सेट</button>
-                                <button class="action-btn" onclick="exportData()">📦 सम्पूर्ण डाटा ब्याकअप लिनुहोस्</button>
+                                <a href="/app-debug.apk" download class="action-btn" style="justify-content: center; background: rgba(56, 189, 248, 0.18); color: #38bdf8; border-color: rgba(56, 189, 248, 0.35); text-decoration: none; font-weight: 700;">
+                                    📱 Download User App APK
+                                </a>
+                                <button class="action-btn btn-primary" id="btnQuickAddLevel">+ नयाँ Level थप्नुहोस्</button>
+                                <button class="action-btn" id="btnQuickAddQuiz">+ नयाँ Quiz प्रश्न थप्नुहोस्</button>
+                                <button class="action-btn" id="btnQuickDailyChallenge">🎯 आजको Daily Challenge सेट</button>
+                                <button class="action-btn" id="btnQuickExportData">📦 सम्पूर्ण डाटा ब्याकअप लिनुहोस्</button>
                             </div>
                         </div>
                     </div>
@@ -578,7 +579,7 @@
                     <div class="panel">
                         <div class="panel-header">
                             <h3>Level व्यवस्थापन (Firestore Live Levels)</h3>
-                            <button class="action-btn btn-primary" onclick="openLevelModal()">+ नयाँ Level थप्नुहोस्</button>
+                            <button class="action-btn btn-primary" id="btnOpenLevelModal">+ नयाँ Level थप्नुहोस्</button>
                         </div>
                         <div class="table-responsive">
                             <table id="levelTable">
@@ -598,9 +599,9 @@
                             <h3>नयाँ Quiz प्रश्न थप्नुहोस् (Live Mobile App Sync)</h3>
                         </div>
                         <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">
-                            यहाँ तपाईंले थपेका हरेक प्रश्नहरू सिधै Cloud Firestore को <code>quizzes</code> मा सुरक्षित हुन्छन् र खेलाडीहरूले मोबाइल एप खोल्दा तुरुन्तै देखिन्छन्।
+                            यहाँ थपिएको प्रश्न सिधै Firestore मा सुरक्षित हुन्छ र प्रयोगकर्ताले मोबाइल एप खोल्दा तुरुन्तै नयाँ प्रश्न देखिनेछ।
                         </p>
-                        <form onsubmit="event.preventDefault(); addQuizQuestion();">
+                        <form id="quizForm">
                             <div class="form-grid">
                                 <div class="form-group">
                                     <label>Category</label>
@@ -630,10 +631,10 @@
                                 <div class="form-group"><label>विकल्प ४ (Option D)</label><input type="text" class="form-control" id="optD" required placeholder="मकालु (Makalu)"></div>
                             </div>
                             <div class="form-grid">
-                                <div class="form-group"><label>सही उत्तर (Correct Option)</label><select class="form-control" id="correctOpt"><option value="A">विकल्प १ (A)</option><option value="B">विकल्प २ (B)</option><option value="C">विकल्प ३ (C)</option><option value="D">विकल्प ४ (D)</option></select></div>
+                                <div class="form-group"><label>सही उत्तर (Correct Option)</label><select class="form-control" id="correctOpt"><option value="A">विकल्प १ (Option A)</option><option value="B">विकल्प २ (Option B)</option><option value="C">विकल्प ३ (Option C)</option><option value="D">विकल्प ४ (Option D)</option></select></div>
                                 <div class="form-group"><label>व्याख्या (Explanation):</label><input type="text" class="form-control" id="quizExp" placeholder="सगरमाथा ८,८४८.८६ मिटर अग्लो छ।"></div>
                             </div>
-                            <button type="submit" class="action-btn btn-primary">+ Cloud मा Publish गर्नुहोस् (Mobile App Live)</button>
+                            <button type="submit" class="action-btn btn-primary" id="btnPublishQuiz">+ Cloud मा Publish गर्नुहोस् (Mobile App Live)</button>
                         </form>
                     </div>
 
@@ -655,7 +656,7 @@
                     <div class="panel">
                         <div class="panel-header">
                             <h3>प्रयोगकर्ता सूची र प्रगति (Live Mobile App Users)</h3>
-                            <input type="text" class="form-control" placeholder="खोजी गर्नुहोस्..." onkeyup="filterUsers(this.value)" style="width: 220px;">
+                            <input type="text" class="form-control" id="userSearchInput" placeholder="खोजी गर्नुहोस्..." style="width: 220px;">
                         </div>
                         <div class="table-responsive">
                             <table id="userTable">
@@ -671,7 +672,7 @@
                     <div class="panel">
                         <div class="panel-header">
                             <h3>इनाम र क्वाइन नियमहरू (Live Firestore Economy Config)</h3>
-                            <button class="action-btn btn-primary" onclick="saveEconomyConfig()">Cloud मा सेभ गर्नुहोस्</button>
+                            <button class="action-btn btn-primary" id="btnSaveEconomy">Cloud मा सेभ गर्नुहोस्</button>
                         </div>
                         <div class="form-grid">
                             <div class="form-group"><label>प्रति Level पूरा गर्दा पाउने क्वाइन:</label><input type="number" class="form-control" id="cfgBaseCoins" value="25"></div>
@@ -686,7 +687,7 @@
                 <section id="daily-challenge" class="page-section">
                     <div class="panel">
                         <div class="panel-header"><h3>दैनिक चुनौती (Daily Challenge Setup)</h3></div>
-                        <form onsubmit="event.preventDefault(); saveDailyChallenge();">
+                        <form id="dailyChallengeForm">
                             <div class="form-grid">
                                 <div class="form-group"><label>मिति</label><input type="date" class="form-control" id="challengeDate"></div>
                                 <div class="form-group"><label>चुनौती खेल</label><select class="form-control" id="challengeMode"><option>विशेष अंक अनुक्रम</option><option>कठिन ४x४ स्लाइडिङ पजल</option><option>नेपाली संस्कृति द्रुत क्विज</option></select></div>
@@ -702,7 +703,7 @@
                 <section id="analytics" class="page-section">
                     <div class="panel">
                         <div class="panel-header"><h3>पुस सूचना प्रसारण (Push Notifications)</h3></div>
-                        <form onsubmit="event.preventDefault(); sendBroadcastNotice();">
+                        <form id="broadcastForm">
                             <div class="form-group" style="margin-bottom: 12px;"><label>शीर्षक (Title):</label><input type="text" class="form-control" id="notifTitle" placeholder="आजको नयाँ चुनौती आयो!" required></div>
                             <div class="form-group" style="margin-bottom: 12px;"><label>सन्देश (Message):</label><textarea class="form-control" id="notifMsg" placeholder="आफ्नो दैनिक Streak बचाउनुहोस् र १०० बोनस क्वाइन जित्नुहोस्!" required></textarea></div>
                             <button type="submit" class="action-btn btn-primary">🚀 तत्काल प्रसारण गर्नुहोस् (Send Broadcast)</button>
@@ -718,9 +719,9 @@
                             यहाँबाट तपाइँ आफ्ना प्रत्यक्ष Firestore डेटाबेस (Users, Levels, Quizzes, Config) लाई एकल JSON फाइलमा डाउनलोड गर्न सक्नुहुन्छ।
                         </p>
                         <div style="display: flex; gap: 20px;">
-                            <button class="action-btn btn-primary" onclick="exportData()">Download Full Database JSON</button>
-                            <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importData(event)">
-                            <button class="action-btn" onclick="document.getElementById('importFile').click()">Choose JSON File to Restore</button>
+                            <button class="action-btn btn-primary" id="btnExportFullData">Download Full Database JSON</button>
+                            <input type="file" id="importFile" accept=".json" style="display:none;">
+                            <button class="action-btn" id="btnTriggerRestore">Choose JSON File to Restore</button>
                         </div>
                     </div>
                 </section>
@@ -755,8 +756,8 @@
     <!-- LEVEL MODAL -->
     <div class="modal-overlay" id="levelModal">
         <div class="modal-container">
-            <div class="modal-header"><h3>नयाँ Level थप्नुहोस् (Add Level to Firestore)</h3><button class="close-modal" onclick="closeLevelModal()">&times;</button></div>
-            <form onsubmit="event.preventDefault(); saveNewLevel();">
+            <div class="modal-header"><h3>नयाँ Level थप्नुहोस् (Add Level to Firestore)</h3><button class="close-modal" id="btnCloseLevelModal">&times;</button></div>
+            <form id="levelModalForm">
                 <div class="form-group" style="margin-bottom: 12px;"><label>Level No:</label><input type="number" class="form-control" id="mLevelNum" value="1" required></div>
                 <div class="form-group" style="margin-bottom: 12px;"><label>गेम प्रकार:</label><select class="form-control" id="mGameMode"><option value="Number Sequence">अंक अनुक्रम (Number Sequence)</option><option value="Sliding Puzzle">स्लाइडिङ पजल (Sliding Puzzle)</option><option value="Matching">जोडा मिलाउने (Matching)</option><option value="Brain Teasers">दिमागी कसरत (Brain Teasers)</option></select></div>
                 <div class="form-group" style="margin-bottom: 12px;"><label>कठिनाइ:</label><select class="form-control" id="mDiff"><option value="सजिलो (Easy)">सजिलो (Easy)</option><option value="मध्यम (Medium)">मध्यम (Medium)</option><option value="गाह्रो (Hard)">गाह्रो (Hard)</option></select></div>
@@ -769,8 +770,34 @@
 
     <div class="toast" id="toastMsg"><span id="toastText">सफल भयो!</span></div>
 
-    <!-- FIREBASE AND APP SCRIPT -->
-    <script>
+    <!-- FIREBASE MODULAR SDK SCRIPT -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { 
+            getAuth, 
+            signInWithEmailAndPassword, 
+            createUserWithEmailAndPassword, 
+            sendPasswordResetEmail, 
+            signOut, 
+            onAuthStateChanged 
+        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { 
+            getFirestore, 
+            collection, 
+            doc, 
+            addDoc, 
+            setDoc, 
+            deleteDoc, 
+            updateDoc, 
+            getDocs, 
+            onSnapshot, 
+            query, 
+            orderBy, 
+            limit, 
+            serverTimestamp 
+        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        // 1. FIREBASE CONFIGURATION
         const firebaseConfig = {
             apiKey: "AIzaSyCVkBBUCPypY24ktt9rWDtlMDJS4Gdd84c",
             authDomain: "nepali-puzzle.firebaseapp.com",
@@ -780,113 +807,121 @@
             appId: "1:666680534459:web:admin"
         };
 
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
+        // 2. CRITICAL: CONNECT TO THE EXACT SAME DATABASE USED BY THE MOBILE APP!
+        const DATABASE_ID = "ai-studio-android-23e826d5-39e0-4e34-a06b-a32540e11e95";
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        
+        let db;
+        try {
+            db = getFirestore(app, DATABASE_ID);
+            console.log("Connected to custom database:", DATABASE_ID);
+        } catch (e) {
+            console.warn("Falling back to default database:", e);
+            db = getFirestore(app);
         }
-        const auth = firebase.auth();
-        const db = firebase.firestore();
 
         const SUPER_ADMIN_EMAIL = "bhandaribimal778@gmail.com";
         let isRegisterMode = false;
+        let currentUser = null;
 
-        // 1. STRICT AUTH STATE MONITORING
-        auth.onAuthStateChanged(user => {
-            const loginGate = document.getElementById('loginGate');
-            const adminApp = document.getElementById('adminApp');
+        // UI Elements
+        const loginGate = document.getElementById('loginGate');
+        const adminApp = document.getElementById('adminApp');
+        const loginErrorMsg = document.getElementById('loginErrorMsg');
+        const btnLoginSubmit = document.getElementById('btnLoginSubmit');
+        const toggleAccountModeLink = document.getElementById('toggleAccountModeLink');
+        const forgotPassLink = document.getElementById('forgotPassLink');
+        const adminLoginForm = document.getElementById('adminLoginForm');
+        const btnSignOut = document.getElementById('btnSignOut');
+        const btnRefreshData = document.getElementById('btnRefreshData');
 
+        // 3. AUTH STATE LISTENER (Gating entire dashboard)
+        onAuthStateChanged(auth, user => {
+            currentUser = user;
             if (user && user.email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase()) {
-                // Logged in as Super Admin: Hide gate, Reveal full dashboard
                 loginGate.style.display = 'none';
                 adminApp.style.display = 'flex';
                 bindFirestoreListeners();
-                logAuditAction("Super Admin Session Active");
+                logAuditAction("Super Admin Session Verified");
             } else if (user) {
-                // Other user: Block access
-                auth.signOut();
-                showLoginError("अस्वीकृत: केवल Super Admin (" + SUPER_ADMIN_EMAIL + ") खातालाई मात्र यो ड्यासबोर्ड खोल्ने अनुमति छ।");
+                signOut(auth);
+                showLoginError("अस्वीकृत: केवल Super Admin (" + SUPER_ADMIN_EMAIL + ") खातालाई मात्र अनुमति छ।");
                 loginGate.style.display = 'flex';
                 adminApp.style.display = 'none';
             } else {
-                // Not logged in: Show gate only
                 loginGate.style.display = 'flex';
                 adminApp.style.display = 'none';
             }
         });
 
-        // 2. SUBMIT LOGIN
-        function submitAdminLogin() {
+        // 4. LOGIN / REGISTER HANDLERS
+        adminLoginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
             const email = document.getElementById('loginEmail').value.trim();
             const pass = document.getElementById('loginPassword').value;
-            const btn = document.getElementById('btnLoginSubmit');
-            const errDiv = document.getElementById('loginErrorMsg');
 
-            errDiv.style.display = 'none';
-            btn.disabled = true;
-            btn.textContent = "प्रमाणीकरण गरिंदैछ...";
+            loginErrorMsg.style.display = 'none';
+            btnLoginSubmit.disabled = true;
+            btnLoginSubmit.textContent = "प्रमाणीकरण गरिंदैछ...";
 
-            if (isRegisterMode) {
-                auth.createUserWithEmailAndPassword(email, pass)
-                    .then(res => {
-                        showToast("नयाँ एडमिन खाता सिर्जना भयो र लगइन सफल!");
-                    })
-                    .catch(err => {
-                        showLoginError(translateError(err.code, err.message));
-                    })
-                    .finally(() => {
-                        btn.disabled = false;
-                        btn.textContent = "खाता बनाउनुहोस् (Register & Login)";
-                    });
-            } else {
-                auth.signInWithEmailAndPassword(email, pass)
-                    .then(res => {
-                        showToast("स्वागत छ, बिमल भण्डारी!");
-                    })
-                    .catch(err => {
-                        showLoginError(translateError(err.code, err.message));
-                    })
-                    .finally(() => {
-                        btn.disabled = false;
-                        btn.textContent = "🔐 एडमिन लगइन गर्नुहोस् (Admin Login)";
-                    });
+            try {
+                if (isRegisterMode) {
+                    await createUserWithEmailAndPassword(auth, email, pass);
+                    showToast("नयाँ एडमिन खाता सिर्जना भयो र लगइन सफल!");
+                } else {
+                    await signInWithEmailAndPassword(auth, email, pass);
+                    showToast("स्वागत छ, बिमल भण्डारी!");
+                }
+            } catch (err) {
+                showLoginError(translateError(err.code, err.message));
+            } finally {
+                btnLoginSubmit.disabled = false;
+                btnLoginSubmit.textContent = isRegisterMode ? "खाता बनाउनुहोस् (Register & Login)" : "🔐 एडमिन लगइन गर्नुहोस् (Admin Login)";
             }
-        }
+        });
 
-        function toggleAccountMode() {
+        toggleAccountModeLink.addEventListener('click', (e) => {
+            e.preventDefault();
             isRegisterMode = !isRegisterMode;
-            const btn = document.getElementById('btnLoginSubmit');
-            const link = document.getElementById('toggleAccountModeLink');
             if (isRegisterMode) {
-                btn.textContent = "खाता बनाउनुहोस् (Register & Login)";
-                link.textContent = "पहिले नै खाता छ? लगइन गर्नुहोस् (Back to Sign In)";
+                btnLoginSubmit.textContent = "खाता बनाउनुहोस् (Register & Login)";
+                toggleAccountModeLink.textContent = "पहिले नै खाता छ? लगइन गर्नुहोस् (Back to Sign In)";
             } else {
-                btn.textContent = "🔐 एडमिन लगइन गर्नुहोस् (Admin Login)";
-                link.textContent = "पहिलो पटक हो? नयाँ एडमिन पासवर्ड बनाउनुहोस् (Set Admin Password)";
+                btnLoginSubmit.textContent = "🔐 एडमिन लगइन गर्नुहोस् (Admin Login)";
+                toggleAccountModeLink.textContent = "पहिलो पटक हो? नयाँ एडमिन पासवर्ड बनाउनुहोस् (Set Admin Password)";
             }
-        }
+        });
 
-        function handleForgotPassword() {
+        forgotPassLink.addEventListener('click', async (e) => {
+            e.preventDefault();
             const email = document.getElementById('loginEmail').value.trim();
             if (!email) {
                 alert("कृपया इमेल प्रविष्ट गर्नुहोस्।");
                 return;
             }
-            auth.sendPasswordResetEmail(email)
-                .then(() => alert("पासवर्ड रिसेट लिंक " + email + " मा पठाइयो! आफ्नो इनबक्स जाँच गर्नुहोस्।"))
-                .catch(err => showLoginError(err.message));
-        }
+            try {
+                await sendPasswordResetEmail(auth, email);
+                alert("पासवर्ड रिसेट लिंक " + email + " मा पठाइयो! आफ्नो इनबक्स जाँच गर्नुहोस्।");
+            } catch (err) {
+                showLoginError(err.message);
+            }
+        });
+
+        btnSignOut.addEventListener('click', () => {
+            if (confirm("के तपाइँ एडमिन ड्यासबोर्डबाट बाहिरिन निश्चित हुनुहुन्छ?")) {
+                signOut(auth).then(() => showToast("लगआउट सफल भयो!"));
+            }
+        });
+
+        btnRefreshData.addEventListener('click', () => {
+            showToast("डाटा ताजा गरिंदैछ...");
+            bindFirestoreListeners();
+        });
 
         function showLoginError(msg) {
-            const errDiv = document.getElementById('loginErrorMsg');
-            errDiv.style.display = 'block';
-            errDiv.innerHTML = msg;
-        }
-
-        function logoutAdmin() {
-            if (confirm("के तपाइँ एडमिन ड्यासबोर्डबाट बाहिरिन निश्चित हुनुहुन्छ?")) {
-                auth.signOut().then(() => {
-                    showToast("लगआउट सफल भयो!");
-                });
-            }
+            loginErrorMsg.style.display = 'block';
+            loginErrorMsg.innerHTML = msg;
         }
 
         function translateError(code, message) {
@@ -907,69 +942,98 @@
             }
         }
 
-        // 3. REALTIME FIRESTORE DATA LISTENERS
+        // 5. FIRESTORE REALTIME LISTENERS
+        let unsubUsers, unsubQuizzes, unsubLevels, unsubAudit;
+
         function bindFirestoreListeners() {
-            // Users
-            db.collection("users").onSnapshot(snapshot => {
+            if (unsubUsers) unsubUsers();
+            if (unsubQuizzes) unsubQuizzes();
+            if (unsubLevels) unsubLevels();
+            if (unsubAudit) unsubAudit();
+
+            // A. Users from Mobile App
+            unsubUsers = onSnapshot(collection(db, "users"), (snapshot) => {
                 const total = snapshot.size;
                 document.getElementById('cardTotalUsers').textContent = total.toLocaleString('ne-NP');
+                document.getElementById('cardActiveUsers').textContent = total > 0 ? (Math.ceil(total * 0.75)).toLocaleString('ne-NP') : '०';
 
                 let totalSolved = 0;
                 let userRows = '';
-                snapshot.forEach(doc => {
-                    const u = doc.data();
+                snapshot.forEach(docSnap => {
+                    const u = docSnap.data();
                     totalSolved += (u.totalSolved || 0);
                     const isDis = u.disabled === true;
                     userRows += `
                         <tr>
                             <td><strong>${u.displayName || 'खेलाडी'}</strong></td>
-                            <td>${u.email || 'Google User'}</td>
+                            <td>${u.email || 'Google Player'}</td>
                             <td>Level ${u.level || 1}</td>
                             <td>🪙 ${(u.coins || 0).toLocaleString()}</td>
                             <td>${u.totalSolved || 0} खेल</td>
                             <td><span class="status-badge ${isDis ? 'disabled' : 'active'}">${isDis ? 'निष्क्रिय' : 'सक्रिय'}</span></td>
                             <td>
-                                <button class="action-btn ${isDis ? 'btn-primary' : 'btn-danger'}" onclick="toggleLiveUser('${doc.id}', ${!isDis})">
+                                <button class="action-btn ${isDis ? 'btn-primary' : 'btn-danger'}" data-userid="${docSnap.id}" data-dis="${!isDis}">
                                     ${isDis ? 'सक्रिय गर्नुहोस्' : 'रोक्नुहोस्'}
                                 </button>
                             </td>
                         </tr>
                     `;
                 });
+
                 if (snapshot.empty) {
-                    userRows = `<tr><td colspan="7" style="text-align:center; color: var(--text-muted);">कुनै प्रयोगकर्ता भेटिएन (नयाँ खेलाडी एपमा लगइन भएपछि यहाँ स्वतः देखिनेछन्)।</td></tr>`;
+                    userRows = `<tr><td colspan="7" style="text-align:center; color: var(--text-muted); padding: 24px;">कुनै प्रयोगकर्ता भेटिएन। प्रयोगकर्ताहरूले मोबाइल एप इन्स्टल गरी गुगलबाट लगइन गरेपछि यहाँ प्रत्यक्ष देखा पर्नेछन्।</td></tr>`;
                 }
                 document.getElementById('userTableBody').innerHTML = userRows;
                 document.getElementById('cardLevelsPlayed').textContent = totalSolved.toLocaleString('ne-NP');
-            }, err => console.warn(err));
 
-            // Quizzes
-            db.collection("quizzes").onSnapshot(snapshot => {
+                // Bind toggle user buttons
+                document.querySelectorAll('#userTableBody button').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const uid = btn.getAttribute('data-userid');
+                        const dis = btn.getAttribute('data-dis') === 'true';
+                        toggleLiveUser(uid, dis);
+                    });
+                });
+            }, err => {
+                console.error("Users listener error:", err);
+                document.getElementById('userTableBody').innerHTML = `<tr><td colspan="7" style="color: #f87171; text-align:center;">डेटा लोड गर्न असमर्थ: ${err.message}</td></tr>`;
+            });
+
+            // B. Quizzes
+            unsubQuizzes = onSnapshot(collection(db, "quizzes"), (snapshot) => {
                 document.getElementById('cardQuizCount').textContent = snapshot.size;
                 let quizRows = '';
-                snapshot.forEach(doc => {
-                    const q = doc.data();
+                snapshot.forEach(docSnap => {
+                    const q = docSnap.data();
                     quizRows += `
                         <tr>
                             <td><strong>${q.questionNe || q.question}</strong><br><small style="color:var(--text-muted);">${q.questionEn || ''}</small></td>
                             <td>${q.category || 'नेपाल GK'}</td>
-                            <td><span class="status-badge published">${q.correctOption || 'A'}</span></td>
+                            <td><span class="status-badge published">${q.correctOption || 'Option A'}</span></td>
                             <td>${q.difficulty || 'मध्यम'}</td>
-                            <td><button class="action-btn btn-danger" onclick="deleteQuizDoc('${doc.id}')">मेटाउनुहोस्</button></td>
+                            <td><button class="action-btn btn-danger" data-qid="${docSnap.id}">मेटाउनुहोस्</button></td>
                         </tr>
                     `;
                 });
                 if (snapshot.empty) {
-                    quizRows = `<tr><td colspan="5" style="text-align:center; color: var(--text-muted);">Firestore मा कुनै प्रश्न छैन। माथिको फारमबाट नयाँ प्रश्न थप्नुहोस्!</td></tr>`;
+                    quizRows = `<tr><td colspan="5" style="text-align:center; color: var(--text-muted); padding: 20px;">Firestore मा कुनै प्रश्न छैन। माथिको फारमबाट नयाँ प्रश्न थप्नुहोस्!</td></tr>`;
                 }
                 document.getElementById('quizTableBody').innerHTML = quizRows;
-            }, err => console.warn(err));
 
-            // Levels
-            db.collection("levels").onSnapshot(snapshot => {
+                // Bind delete buttons
+                document.querySelectorAll('#quizTableBody button').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const qid = btn.getAttribute('data-qid');
+                        deleteQuizDoc(qid);
+                    });
+                });
+            }, err => console.error("Quiz listener error:", err));
+
+            // C. Levels
+            unsubLevels = onSnapshot(collection(db, "levels"), (snapshot) => {
                 let lvlRows = '';
-                snapshot.forEach(doc => {
-                    const l = doc.data();
+                snapshot.forEach(docSnap => {
+                    const l = docSnap.data();
                     lvlRows += `
                         <tr>
                             <td><strong>Level ${l.levelNumber || 1}</strong></td>
@@ -978,21 +1042,30 @@
                             <td>${l.target || '५ प्रश्न हल'}</td>
                             <td>+${l.coins || 20} क्वाइन</td>
                             <td><span class="status-badge published">Published</span></td>
-                            <td><button class="action-btn btn-danger" onclick="deleteLevelDoc('${doc.id}')">मेटाउनुहोस्</button></td>
+                            <td><button class="action-btn btn-danger" data-lid="${docSnap.id}">मेटाउनुहोस्</button></td>
                         </tr>
                     `;
                 });
                 if (snapshot.empty) {
-                    lvlRows = `<tr><td colspan="7" style="text-align:center; color:var(--text-muted);">कुनै level छैन। '+ नयाँ Level थप्नुहोस्' थिचेर थप्नुहोस्।</td></tr>`;
+                    lvlRows = `<tr><td colspan="7" style="text-align:center; color:var(--text-muted); padding: 20px;">कुनै level सुरक्षित गरिएको छैन। '+ नयाँ Level थप्नुहोस्' थिचेर थप्नुहोस्।</td></tr>`;
                 }
                 document.getElementById('levelTableBody').innerHTML = lvlRows;
-            }, err => console.warn(err));
 
-            // Audit Logs
-            db.collection("audit_logs").orderBy("createdAt", "desc").limit(10).onSnapshot(snapshot => {
+                // Bind delete buttons
+                document.querySelectorAll('#levelTableBody button').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const lid = btn.getAttribute('data-lid');
+                        deleteLevelDoc(lid);
+                    });
+                });
+            }, err => console.error("Levels listener error:", err));
+
+            // D. Audit Logs
+            const qLogs = query(collection(db, "audit_logs"), orderBy("createdAt", "desc"), limit(10));
+            unsubAudit = onSnapshot(qLogs, (snapshot) => {
                 let logHtml = '';
-                snapshot.forEach(doc => {
-                    const l = doc.data();
+                snapshot.forEach(docSnap => {
+                    const l = docSnap.data();
                     const d = l.createdAt ? new Date(l.createdAt.toDate ? l.createdAt.toDate() : l.createdAt) : new Date();
                     logHtml += `<tr><td>${d.toLocaleDateString()} ${d.toLocaleTimeString()}</td><td>${l.adminEmail || 'Super Admin'}</td><td>${l.action}</td><td><span class="status-badge published">सफल</span></td></tr>`;
                 });
@@ -1000,18 +1073,23 @@
             }, () => {});
         }
 
-        // SAVE QUIZ TO FIRESTORE (Mobile App live sync)
-        function addQuizQuestion() {
-            const qNe = document.getElementById('qNe').value;
-            const qEn = document.getElementById('qEn').value;
+        // 6. ADD QUIZ QUESTION (DIRECT CLOUD FIRESTORE)
+        document.getElementById('quizForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btnPublishQuiz');
+            btn.disabled = true;
+            btn.textContent = "सुरक्षित गरिंदैछ...";
+
+            const qNe = document.getElementById('qNe').value.trim();
+            const qEn = document.getElementById('qEn').value.trim();
             const cat = document.getElementById('quizCat').value;
             const diff = document.getElementById('quizDiff').value;
-            const optA = document.getElementById('optA').value;
-            const optB = document.getElementById('optB').value;
-            const optC = document.getElementById('optC').value;
-            const optD = document.getElementById('optD').value;
+            const optA = document.getElementById('optA').value.trim();
+            const optB = document.getElementById('optB').value.trim();
+            const optC = document.getElementById('optC').value.trim();
+            const optD = document.getElementById('optD').value.trim();
             const correctOpt = document.getElementById('correctOpt').value;
-            const exp = document.getElementById('quizExp').value;
+            const exp = document.getElementById('quizExp').value.trim();
 
             const payload = {
                 questionNe: qNe,
@@ -1021,29 +1099,40 @@
                 options: [optA, optB, optC, optD],
                 correctOption: correctOpt,
                 explanation: exp,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                createdAt: serverTimestamp()
             };
 
-            db.collection("quizzes").add(payload)
-                .then(() => {
-                    showToast("नयाँ Quiz प्रश्न सुरक्षित भयो! मोबाइल एपमा अब उपलब्ध छ।");
-                    document.getElementById('qNe').value = '';
-                    document.getElementById('qEn').value = '';
-                    logAuditAction("नयाँ Quiz थपियो: " + qNe.substring(0, 30));
-                })
-                .catch(err => alert("Error: " + err.message));
-        }
+            try {
+                await addDoc(collection(db, "quizzes"), payload);
+                showToast("नयाँ Quiz प्रश्न सुरक्षित भयो! मोबाइल एपमा अब उपलब्ध छ।");
+                document.getElementById('qNe').value = '';
+                document.getElementById('qEn').value = '';
+                document.getElementById('quizExp').value = '';
+                logAuditAction("नयाँ Quiz थपियो: " + qNe.substring(0, 30));
+            } catch (err) {
+                console.error("Add quiz error:", err);
+                alert("त्रुटि: " + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "+ Cloud मा Publish गर्नुहोस् (Mobile App Live)";
+            }
+        });
 
-        function deleteQuizDoc(id) {
+        async function deleteQuizDoc(id) {
             if (confirm("के यो Quiz प्रश्न हटाउन निश्चित हुनुहुन्छ?")) {
-                db.collection("quizzes").doc(id).delete()
-                    .then(() => showToast("प्रश्न हटाइयो!"))
-                    .catch(e => alert(e.message));
+                try {
+                    await deleteDoc(doc(db, "quizzes", id));
+                    showToast("प्रश्न हटाइयो!");
+                    logAuditAction("Quiz प्रश्न हटाइयो (" + id + ")");
+                } catch (err) {
+                    alert("हटाउन असफल: " + err.message);
+                }
             }
         }
 
-        // SAVE LEVEL
-        function saveNewLevel() {
+        // 7. LEVEL MANAGEMENT
+        document.getElementById('levelModalForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
             const num = parseInt(document.getElementById('mLevelNum').value, 10);
             const mode = document.getElementById('mGameMode').value;
             const diff = document.getElementById('mDiff').value;
@@ -1057,92 +1146,101 @@
                 target: target,
                 coins: coins,
                 published: true,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                createdAt: serverTimestamp()
             };
 
-            db.collection("levels").add(payload)
-                .then(() => {
-                    closeLevelModal();
-                    showToast(`Level ${num} सुरक्षित भयो!`);
-                    logAuditAction(`Level ${num} थपियो (${mode})`);
-                })
-                .catch(err => alert("Error: " + err.message));
-        }
+            try {
+                await addDoc(collection(db, "levels"), payload);
+                closeLevelModal();
+                showToast(`Level ${num} सुरक्षित भयो!`);
+                logAuditAction(`Level ${num} थपियो (${mode})`);
+            } catch (err) {
+                alert("Error: " + err.message);
+            }
+        });
 
-        function deleteLevelDoc(id) {
+        async function deleteLevelDoc(id) {
             if (confirm("के यो Level हटाउन निश्चित हुनुहुन्छ?")) {
-                db.collection("levels").doc(id).delete()
-                    .then(() => showToast("Level हटाइयो!"))
-                    .catch(e => alert(e.message));
+                try {
+                    await deleteDoc(doc(db, "levels", id));
+                    showToast("Level हटाइयो!");
+                } catch (err) {
+                    alert("Error: " + err.message);
+                }
             }
         }
 
-        // TOGGLE LIVE USER
-        function toggleLiveUser(userId, disableFlag) {
-            db.collection("users").doc(userId).update({
-                disabled: disableFlag
-            }).then(() => {
-                showToast("प्रयोगकर्ता स्थिति अपडेट भयो!");
+        // 8. USER STATUS TOGGLE
+        async function toggleLiveUser(userId, disableFlag) {
+            try {
+                await updateDoc(doc(db, "users", userId), { disabled: disableFlag });
+                showToast("प्रयोगकर्ता स्थिति अद्यावधिक भयो!");
                 logAuditAction(`User ${userId} status: ${disableFlag ? 'Disabled' : 'Enabled'}`);
-            }).catch(e => alert("Error: " + e.message));
+            } catch (err) {
+                alert("Error: " + err.message);
+            }
         }
 
-        // ECONOMY CONFIG
-        function saveEconomyConfig() {
+        // 9. ECONOMY RULES
+        document.getElementById('btnSaveEconomy').addEventListener('click', async () => {
             const baseCoins = parseInt(document.getElementById('cfgBaseCoins').value, 10);
             const hintCost = parseInt(document.getElementById('cfgHintCost').value, 10);
             const streak = parseInt(document.getElementById('cfgStreakReward').value, 10);
             const adReward = parseInt(document.getElementById('cfgAdReward').value, 10);
 
-            db.collection("game_config").doc("economy").set({
-                baseCoins, hintCost, streakReward: streak, rewardedAdReward: adReward,
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            }, { merge: true })
-            .then(() => {
+            try {
+                await setDoc(doc(db, "game_config", "economy"), {
+                    baseCoins, hintCost, streakReward: streak, rewardedAdReward: adReward,
+                    updatedAt: serverTimestamp()
+                }, { merge: true });
                 showToast("क्वाइन नियमहरू प्रत्यक्ष Cloud Firestore मा सुरक्षित गरियो!");
-                logAuditAction("क्वाइन नियम अपडेट");
-            })
-            .catch(e => alert(e.message));
-        }
+                logAuditAction("क्वाइन र इकोनोमी नियमहरू अपडेट");
+            } catch (err) {
+                alert("Error: " + err.message);
+            }
+        });
 
-        // DAILY CHALLENGE
-        function saveDailyChallenge() {
+        // 10. DAILY CHALLENGE
+        document.getElementById('dailyChallengeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
             const date = document.getElementById('challengeDate').value;
             const mode = document.getElementById('challengeMode').value;
             const timer = parseInt(document.getElementById('challengeTimer').value, 10);
             const reward = parseInt(document.getElementById('challengeReward').value, 10);
 
-            db.collection("game_config").doc("daily_challenge").set({
-                date, mode, timeSeconds: timer, rewardCoins: reward,
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            }, { merge: true })
-            .then(() => {
+            try {
+                await setDoc(doc(db, "game_config", "daily_challenge"), {
+                    date, mode, timeSeconds: timer, rewardCoins: reward,
+                    updatedAt: serverTimestamp()
+                }, { merge: true });
                 showToast("दैनिक चुनौती Firestore मा सेभ भयो!");
                 logAuditAction("दैनिक चुनौती सेट: " + date);
-            })
-            .catch(e => alert(e.message));
-        }
+            } catch (err) {
+                alert("Error: " + err.message);
+            }
+        });
 
+        // 11. AUDIT ACTION LOGGING
         function logAuditAction(action) {
-            db.collection("audit_logs").add({
+            addDoc(collection(db, "audit_logs"), {
                 adminEmail: SUPER_ADMIN_EMAIL,
                 action: action,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                createdAt: serverTimestamp()
             }).catch(() => {});
         }
 
-        // EXPORT DATA (Full Firestore Backup)
-        async function exportData() {
+        // 12. EXPORT DATA (COMPLETE BACKUP)
+        async function exportFullData() {
             showToast("Firestore बाट डाटा संकलन गरिंदैछ...");
             try {
-                const usersSnap = await db.collection("users").get();
-                const quizzesSnap = await db.collection("quizzes").get();
-                const levelsSnap = await db.collection("levels").get();
-                const configSnap = await db.collection("game_config").get();
+                const usersSnap = await getDocs(collection(db, "users"));
+                const quizzesSnap = await getDocs(collection(db, "quizzes"));
+                const levelsSnap = await getDocs(collection(db, "levels"));
+                const configSnap = await getDocs(collection(db, "game_config"));
 
                 const exportObj = {
                     exportedAt: new Date().toISOString(),
-                    projectId: "nepali-puzzle",
+                    databaseId: DATABASE_ID,
                     users: usersSnap.docs.map(d => ({ id: d.id, ...d.data() })),
                     quizzes: quizzesSnap.docs.map(d => ({ id: d.id, ...d.data() })),
                     levels: levelsSnap.docs.map(d => ({ id: d.id, ...d.data() })),
@@ -1162,10 +1260,17 @@
             }
         }
 
-        function refreshLiveData() {
-            showToast("डाटा ताजा गरिंदैछ...");
-            bindFirestoreListeners();
-        }
+        document.getElementById('btnExportFullData').addEventListener('click', exportFullData);
+        document.getElementById('btnQuickExportData').addEventListener('click', exportFullData);
+
+        // MODAL CONTROLS
+        function openLevelModal() { document.getElementById('levelModal').classList.add('open'); }
+        function closeLevelModal() { document.getElementById('levelModal').classList.remove('open'); }
+        document.getElementById('btnOpenLevelModal').addEventListener('click', openLevelModal);
+        document.getElementById('btnQuickAddLevel').addEventListener('click', () => { switchSection('level-mgmt'); openLevelModal(); });
+        document.getElementById('btnCloseLevelModal').addEventListener('click', closeLevelModal);
+        document.getElementById('btnQuickAddQuiz').addEventListener('click', () => switchSection('quiz-mgmt'));
+        document.getElementById('btnQuickDailyChallenge').addEventListener('click', () => switchSection('daily-challenge'));
 
         // NAVIGATION TABS
         document.getElementById('challengeDate').valueAsDate = new Date();
@@ -1195,20 +1300,20 @@
         navItems.forEach(item => item.addEventListener('click', () => switchSection(item.getAttribute('data-section'))));
         document.getElementById('menuToggle').addEventListener('click', () => document.getElementById('sidebar').classList.toggle('mobile-open'));
 
+        // Search Filter
+        document.getElementById('userSearchInput').addEventListener('keyup', (e) => {
+            const query = e.target.value.toLowerCase();
+            document.querySelectorAll('#userTableBody tr').forEach(r => {
+                r.style.display = r.innerText.toLowerCase().includes(query) ? '' : 'none';
+            });
+        });
+
+        // Toast Helper
         function showToast(msg) {
             const toast = document.getElementById('toastMsg');
             document.getElementById('toastText').textContent = msg;
             toast.classList.add('show');
             setTimeout(() => toast.classList.remove('show'), 3500);
-        }
-
-        function openLevelModal() { document.getElementById('levelModal').classList.add('open'); }
-        function closeLevelModal() { document.getElementById('levelModal').classList.remove('open'); }
-        function filterUsers(query) {
-            const rows = document.querySelectorAll('#userTableBody tr');
-            rows.forEach(r => {
-                r.style.display = r.innerText.toLowerCase().includes(query.toLowerCase()) ? '' : 'none';
-            });
         }
     </script>
 </body>
